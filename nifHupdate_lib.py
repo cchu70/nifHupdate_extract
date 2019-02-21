@@ -47,11 +47,19 @@ def createShFile(configDict, startDate, endDate):
     fastaGeneCmd = """%s | %s | %s | python3 nifH_genome_seq_extractor.py > %s.gene.fasta\n""" % (cat, grepNifH, acc, prefix)
     fastaGenomeCmd = """%s | %s | %s | python3 nifH_genome_seq_extractor.py > %s.genome.fasta\n""" % (cat, grepGenome, acc, prefix)
 
+
+    # Get files with the list of fasta file names
+    lofnCmd = """ls | grep '%s.*.fasta' > %s.fastaFilesList.txt"""
+
+
+    # Find most frequent sequence lengths
+
     shFileName = "%s.%s.sh" % (prefix, startDate)
     sh = open(shFileName, "w")
     sh.write(edirectCmd)
     sh.write(fastaNifHCmd)
     sh.write(fastaGenomeCmd)
+    sh.write(lofnCmd)
     sh.close()
     return shFileName
 
