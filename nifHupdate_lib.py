@@ -4,6 +4,7 @@ __date__ ="2/18/19"
 
 
 from os.path import abspath, join, isfile
+from Bio import SeqIO
 import subprocess
 import time
 
@@ -15,7 +16,13 @@ def_tag      = "GENE"
 def_start    = "2012"
 def_end      = "2019"
 def_datetype = "PDAT"
-def_elements = "Id Caption TaxId Organism Title CreateDate"
+def_elements = "Id Caption TaxId Slen Organism Title CreateDate"
+
+
+#========================
+def splitbyLength(fastaFile):
+
+
 
 #========================
 def createShFile(configDict, startDate, endDate):
