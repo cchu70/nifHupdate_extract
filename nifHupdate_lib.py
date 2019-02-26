@@ -7,6 +7,7 @@ from os.path import abspath, join, isfile
 from Bio import SeqIO
 import subprocess
 import time
+from shutil import copyfile
 
 #========================
 # Defaults
@@ -19,49 +20,54 @@ def_datetype = "PDAT"
 def_elements = "Id Caption TaxId Slen Organism Title CreateDate"
 
 
-#========================
-def splitbyLength(fastaFile):
+# #========================
+# def splitbyLength(fastaFile):
 
 
 
 #========================
-def createShFile(configDict, startDate, endDate):
-    query    = configDict["QUERY"]
-    prefix   = configDict["PREFIX"]
-    query    = configDict["QUERY"]
-    datetype = configDict["DATETYPE"]
+def createShFile(cmdList, basePath, prefix, stage):
 
-    esearch  = """esearch -db nucleotide -query \"%s\""""    % (query)
-    efilter  = """efilter -mindate %s -maxdate %s -datetype %s""" % (startDate, endDate, datetype)
+    shFileName = "%s/%s_%s.sh" % (basePath, prefix, stage)
+
+    with open(shFileName, "w") as fh:
+
+        # fh.write("# %s%s%s" % time.localtime(time.time()))
+        # print(time.localtime(time.time()))
+        fh.write("#!/bin/bash\n")
+        fh.write("\n")
+        for cmd in cmdList:
+            fh.write(cmd)
+        #####
+    #####
+
+    time.sleep(5)
+
+    return shFileName
+
+#========================
+def esearchCmds(configDict, year):
+
+    esearch  = """esearch -db nucleotide -query \"%s\""""    % (configDict["QUERY"])
+    efilter  = """efilter -mindate %s -maxdate %s -datetype %s""" % (year, year + 1, configDict["DATETYPE"])
     efetch_1 = """efetch -format docsum"""
     xtract   = """xtract -pattern DocumentSummary -element %s"""  % (def_elements)
-    filters  = """grep -e '%s|genome'""" % (query)
+    edirectCmd = """%s | %s | %s | %s > %s_%s_xtract.txt\n""" % (esearch, efilter, efetch_1, xtract, configDict["PREFIX"], year)
 
-    edirectCmd = """%s | %s | %s | %s > %s_xtract.txt\n""" % (esearch, efilter, efetch_1, xtract, prefix)
+    return edirectCmd
 
-    cat = "cat %s_xtract.txt" % (prefix)
-    grepNifH = "grep 'nifH'"
-    grepGenome = "grep 'genome'"
+#========================
+def fastaCmds(configDict, year, grepFilter):
+
+    cat = "cat %s_%s_xtract.txt" % (configDict["PREFIX"], year)
     acc = """awk 'BEGIN { ORS="," }; { print $2 }'"""
 
-    fastaGeneCmd = """%s | %s | %s | python3 nifH_genome_seq_extractor.py > %s.gene.fasta\n""" % (cat, grepNifH, acc, prefix)
-    fastaGenomeCmd = """%s | %s | %s | python3 nifH_genome_seq_extractor.py > %s.genome.fasta\n""" % (cat, grepGenome, acc, prefix)
+
+    fastaCmd = """%s | grep '%s' | %s | python3 nifHupdate_fasta.py > %s_%s.%s.fasta\n""" % (cat, grepFilter, acc, configDict["PREFIX"], year, grepFilter)
 
 
-    # Get files with the list of fasta file names
-    lofnCmd = """ls | grep '%s.*.fasta' > %s.fastaFilesList.txt"""
+    return fastaCmd
 
-
-    # Find most frequent sequence lengths
-
-    shFileName = "%s.%s.sh" % (prefix, startDate)
-    sh = open(shFileName, "w")
-    sh.write(edirectCmd)
-    sh.write(fastaNifHCmd)
-    sh.write(fastaGenomeCmd)
-    sh.write(lofnCmd)
-    sh.close()
-    return shFileName
 
 #========================
 def parseConfig(configFile):
@@ -79,9 +85,8 @@ def parseConfig(configFile):
 
 #========================
 def launch(shFileName):
-    n = subprocess.Popen(shFileName)
+    n = subprocess.Popen(["bash", shFileName])
     n.poll()
-
 
 #========================
 def parseDate(date):

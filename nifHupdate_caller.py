@@ -46,25 +46,17 @@ def real_main():
     # Setting the config file name
     configFile = "%s/nifHupdate_config.txt" % basePath
 
-    configDict = parseConfig(configFile)
+    configDict = parseConfig( configFile )
 
-    startDate = parseDate(configDict["START"])
-    endDate = parseDate(configDict["END"])
-
-    for year in range(startDate, endDate):
-        if (year == startDate):
-            startDate = configDict["START"]
-        if (year == endDate):
-            startDate = configDict["END"]
-
-        shFileName = createShFile(configDict, startDate, endDate)
-        time.sleep(5)
-        if ( not isfile(shFileName)):
-            throwError("%s not available" % ( shFileName ) )
-        launch(shFileName)
+    launch_cmd = "python3 nifHupdate_launch.py %s %s" % (configFile, 'esearch')
 
 
+    shFileName = createShFile([launch_cmd], basePath, configDict['PREFIX'], 'launch')
+    if ( not isfile(shFileName)):
+        throwError("%s not available" % ( shFileName ) )
+    launch(shFileName)
 
 #==============================================================
 if ( __name__ == '__main__' ):
     real_main()
+
