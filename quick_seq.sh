@@ -17,7 +17,7 @@
 
 # Query for nifH gene and pull out accession numbers and additional data
 # You can change mindate, maxdate, but NOT the order "Id Caption"
-esearch -db nucleotide -query "nifH" | efilter -mindate 05/18/2012 -maxdate 2019 -datetype PDAT | efetch -format docsum | xtract -pattern DocumentSummary -element Id Caption TaxId Organism Title CreateDate > xtract_table.txt
+esearch -db nucleotide -query "nifH [GENE] NOT UNVERIFIED" | efilter -mindate 05/18/2012 -maxdate 2019 -datetype PDAT | efetch -format docsum | xtract -pattern DocumentSummary -element Id Caption TaxId Slen Organism Title CreateDate > xtract_table.txt
 
 # Takes in xtract file from above command, pulls out the accession number (Caption) and pipes into the sequence extractor
 cat xtract_table.txt | grep 'genome' | awk 'BEGIN { ORS="," }; { print $2 }' | python3 nifH_genome_seq_extractor.py > genome_seq.fasta
