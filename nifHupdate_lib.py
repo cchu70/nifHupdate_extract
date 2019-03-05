@@ -19,6 +19,9 @@ def_end      = "2019"
 def_datetype = "PDAT"
 def_elements = "Id Caption TaxId Slen Organism Title CreateDate"
 
+def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp'
+def_dbfiles = ["nhr", "nsd", "nin", "nsi", "nsq"]
+def_evalue = 0.001
 
 # #========================
 # def splitbyLength(fastaFile):
@@ -68,6 +71,26 @@ def fastaCmds(configDict, year, grepFilter):
 
     return fastaCmd
 
+
+#========================
+def blastnCmds(configDict, year, source, fmtString = def_blastnOutfmt):
+
+    # fmt = str(outfmtVer) + " ".join([col for col in fmtList])
+
+    fastFileName = "%s_%s.%s.fasta" % (configDict["PREFIX"], year, source)
+    outputFile = "%s_%s.%s.blastn.txt" % (configDict["PREFIX"], year, source)
+
+    blastCmd = """blastn -query %s -db %s -outfmt '%s' -evalue %s -out %s\n""" % (fastFileName, configDict["DBNAME"], def_blastnOutfmt, def_evalue, outputFile)
+    return blastCmd
+
+#========================
+def verifyDb(dbLabel):
+    checkFiles = [int(isfile("%s.%s" % (dbname, fileType))) for fileType in def_dbfiles]
+    #check if all the database files exist
+    if (sum(checkFiles) != len(def_dbfiles)):
+        return False
+    else:
+        return True
 
 #========================
 def parseConfig(configFile):

@@ -1,5 +1,6 @@
-PREFIX  TEST
+PREFIX  xtract_table
 QUERY   nifH [GENE] NOT UNVERIFIED
 START   2018
 END     2019
 DATETYPE    PDAT
+DBNAME    seqDatabase.fasta
