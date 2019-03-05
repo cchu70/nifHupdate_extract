@@ -1,14 +1,19 @@
-#-db nucleotide -query "nifH" | efilter -mindate 2019 -maxdate 2019 -datetype PDAT | efetch -format docsum | xtract -pattern DocumentSummary -element Id Caption  CreateDate Organism Title Slen TaxId
-#subprocess
-
-# input: -batch mode -start date, -end date, -query, -table elements
-
 #!/usr/bin/python
 __author__="Claudia Chu"
 __date__ ="1/29/19"
 
 
 from os.path import abspath, join, isfile
+
+from Bio import SeqIO
+
+import numpy as numpy
+
+import matplotlib
+
+matplotlib.use('TkAgg') # backend and python framework
+
+import matplotlib.pyplot as plt
 
 from optparse import OptionParser
 
@@ -163,6 +168,101 @@ def accession(year):
     for line in open(file_name, "r"):
         acc_list.append(line.strip())
 
+#==============================================================
+def seqLength(fasta_file):
+    seq_dict = {}
+    curr = ""
+    for line in open(fasta_file, "r"):
+        if ">" in line:
+            curr = line.strip()
+            seq_dict[curr] = 0
+        else:
+            seq_dict[curr] = seq_dict[curr] + len(line.strip())
+
+
+#========================
+def seqLengthCount(fastaFile, length_dict, lengthsArr):
+    for record in SeqIO.parse(fastaFile, "fasta"):
+        length = len(record.seq)
+        try:
+            length_dict[length] = length_dict[len(record.seq)] + 1
+        except:
+            length_dict[length] = 1
+            lengthsArr.append(length)
+
+    return length_dict
+
+
+#========================
+def plotLenFreq(length_dict, lengthsArr):
+    lengthsArr.sort()
+
+    freq = []
+    for l in lengthsArr:
+        freq.append(length_dict[l])
+
+    val = max(freq)
+    print(val, lengthsArr[freq.index(val)])
+
+    plt.plot(lengthsArr, freq)
+    plt.show()
+
+#========================
+def maxLenFreq(lengthDict, maxNum):
+    tupleList = []
+    for length in lengthDict:
+        tupleList.append((lengthDict[length], length))
+        tupleList.append((length, lengthDict[length]))
+    #####
+
+    tupleList.sort()
+    # print(tupleList[-maxNum:])
+    print(tupleList[:maxNum]) # testing minimum
+    return tupleList[-maxNum:]
+
+
+#========================
+def getClusterSamples(seqDatabaseFile, numRecords):
+    # Method to split an original fasta file with sequence labeled with
+    # which cluster it belongs to and take the first n sequences of each
+    cluster_counter = {}
+    # clusterFastaFile = "cluster_%s.fasta" % (clusters[cIndex])
+
+    for record in SeqIO.parse(seqDatabaseFile, "fasta"):
+        cluster = record.id.split(";")[1]
+        try:
+            if (cluster_counter[cluster] > numRecords):
+                continue; # skip the line
+        except:
+            if "/" in cluster:
+                continue;
+            cluster_counter[cluster] = 1
+
+        #####
+
+        cluster_counter[cluster] = cluster_counter[cluster] + 1
+        clusterFastaFile = "%s.fasta" % (cluster)
+
+        with open(clusterFastaFile, "a") as fh:
+            SeqIO.write(record, fh, "fasta")
+
+
+
+#========================
+def blastnCmd(fastaFile, dbName, outfmtVer, fmtString, outputFile):
+
+
+    blastCmd = "blastn -query xtract_table_2019.gene.fa -db seqDatabase.fasta -outfmt 6 -out TEST_2019.db.2_28_19.blastn.txt"
+
+
+    # fmt = str(outfmtVer) + " ".join([col for col in fmtList])
+    fmt = str(outfmtVer) + " " + fmtString
+    blastCmd = "blastn -query %s -db %s -outfmt '%s' -out %s" % (fastaFile, dbName, fmt, outputFile)
+    n = subprocess.Popen(blastCmd, shell=True)
+    n.poll()
+
+
+
 
 #==============================================================
 def real_main():
@@ -186,10 +286,50 @@ def real_main():
     # #####
 
 
+    ##### geetting the fasta file for each year ######
+    # for year in range(startdate_DEF, enddate_DEF + 1):
+    #     #fasta(year)
+    # #####
 
-    for year in range(startdate_DEF, enddate_DEF + 1):
-        fasta(year)
-    #####
+
+    # ##### visualizing frequency #####
+    # lengthDict = {}
+    # lengthsArr = []
+    # for fastaFile in open("fa_list.txt", "r"):
+    #     seqLengthCount(fastaFile.strip(), lengthDict, lengthsArr)
+
+    # maxLenFreq(lengthDict, 10)
+    # # for length in lengthDict:
+    # #     print("%s\t%s" % (length, lengthDict[length]))
+
+    # plotLenFreq(lengthDict, lengthsArr)
+
+
+    ######### Filtering ###########
+
+    # 1) Run blast n
+
+    # for fastaFile in open("fa_list.txt", "r"):
+    #     cmd = "blastn -query %s -subject %s -outfmt 6 -out blastn_year.table" % (fasta_file, seqDatabase)
+    #     for entry in blastn_year.table:
+    #         if (pident == 100):
+    #             cmd = fastaFile | grep "pident" |
+    #             # Use biopython to convert the fastafile into sequence records -> pass in coordinates for it to extract
+    #             fh.write(trimmed sequence)
+
+
+    dbName = "seqDatabase.fasta"
+    fmtList = 'qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp'
+
+    for fastaFile in open("fa_list.txt", "r"):
+        if "cluster" not in fastaFile:
+            outputFile = "BLASTn.%s.%s.txt" % (fastaFile.split(".")[0], fastaFile.split(".")[1])
+            blastnCmd(fastaFile.strip(), dbName, 6, fmtList, outputFile)
+
+
+    # ##### get samples from original database #####
+    # # put this in config?
+    # getClusterSamples("seqDatabase.fasta", 10)
 
 #==============================================================
 if ( __name__ == '__main__' ):
