@@ -2,7 +2,7 @@
 __author__="Claudia Chu"
 __date__ ="2/24/19"
 
-from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds
+from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment
 
 from os.path import abspath, join, isfile
 
@@ -37,8 +37,6 @@ def real_main():
     startDate = parseDate(configDict["START"])
     endDate = parseDate(configDict["END"])
 
-    print(startDate)
-
     # for year in range(startDate, endDate):
     #     if (year == startDate):
     #         startDate = configDict["START"]
@@ -61,9 +59,6 @@ def real_main():
 
         shFileName = createShFile(cmdList, basePath, configDict["PREFIX"], stage)
         launch(shFileName)
-
-
-
 
 
 # ================= STAGE 2 ===================== #
@@ -103,10 +98,19 @@ def real_main():
 
     elif (stage == 'blastn'):
         print("blastn")
-        for year in range (startDate, endDate):
-            cmdList.append(blastnCmds(configDict, year, 'nifH'))
 
-        nextStage = 'end'
+        fofnFileName = "%s.blastnFiles.fofn" % (configDict["PREFIX"])
+        fh = open(fofnFileName, "w")
+
+        for year in range (startDate, endDate):
+            cmdList.append(blastnCmds(configDict, year, 'gene', fh))
+
+        for year in range (startDate, endDate):
+            cmdList.append(blastnCmds(configDict, year, 'genomes', fh))
+
+        fh.close()
+
+        nextStage = 'filter_alignments'
         nextCmd = """python3 nifHupdate_launch.py %s %s\n""" % (configFile, nextStage)
 
         cmdList.append(nextCmd)
@@ -116,7 +120,46 @@ def real_main():
 # ================= STAGE 5 ===================== #
 # Parsing through blastn tables to find best alignment for each sequence
 
+    elif (stage == 'filter_alignments'):
 
+
+        fofnFileName = "%s.blastnFiles.fofn" % (configDict["PREFIX"])
+
+        geneFiltered = "%s.%s.blastn.txt" % (configDict["PREFIX"], "gene")
+        genomeFiltered = "%s.%s.blastn.txt" % (configDict["PREFIX"], "genome")
+        # storing the correct alignment
+
+        nh = open(geneFiltered, "w")
+        gh = open(genomeFiltered, "w")
+
+        for blastnFile in open(fofnFileName, "r"):
+            if "gene" in blastnFile:
+                bestAlignment(blastnFile.strip(), nh)
+            else:
+                bestAlignment(blastnFile.strip(), gh)
+            #####
+        #####
+
+        nh.close()
+        gh.close()
+
+        nextStage = 'trim'
+        nextCmd = """python3 nifHupdate_launch.py %s %s\n""" % (configFile, nextStage)
+
+        cmdList.append(nextCmd)
+        shFileName = createShFile(cmdList, basePath, configDict["PREFIX"], stage)
+        launch(shFileName)
+
+# ================= STAGE 6 ===================== #
+
+    elif (stage == 'trim'):
+
+        nextStage = 'end'
+        nextCmd = """python3 nifHupdate_launch.py %s %s\n""" % (configFile, nextStage)
+
+        cmdList.append(nextCmd)
+        shFileName = createShFile(cmdList, basePath, configDict["PREFIX"], stage)
+        launch(shFileName)
 
 #==============================================================
 if ( __name__ == '__main__' ):
