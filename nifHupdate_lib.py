@@ -73,15 +73,43 @@ def fastaCmds(configDict, year, grepFilter):
 
 
 #========================
-def blastnCmds(configDict, year, source, fmtString = def_blastnOutfmt):
+def blastnCmds(configDict, year, source, fofn, fmtString = def_blastnOutfmt):
 
     # fmt = str(outfmtVer) + " ".join([col for col in fmtList])
 
-    fastFileName = "%s_%s.%s.fasta" % (configDict["PREFIX"], year, source)
+    fastFileName = "%s_%s.%s.fa" % (configDict["PREFIX"], year, source)
     outputFile = "%s_%s.%s.blastn.txt" % (configDict["PREFIX"], year, source)
+    fofn.write(outputFile + "\n")
 
     blastCmd = """blastn -query %s -db %s -outfmt '%s' -evalue %s -out %s\n""" % (fastFileName, configDict["DBNAME"], def_blastnOutfmt, def_evalue, outputFile)
     return blastCmd
+
+#========================
+def bestAlignment(blastnFile, fh):
+    seqAlignDict = {}
+    for line in open(blastnFile, "r"):
+        alignmentData = line.split()
+        fastaLabel = alignmentData[0]
+        pident     = alignmentData[2]
+        qcovhsp    = alignmentData[14]
+
+        try:
+            # compare previous qcovhsp, and change if better score
+            if (seqAlignDict[fastaLabel][14] < qcovhsp):
+                seqAlignDict[fastaLabel] = alignmentData
+                # pass in everything about the alignment
+            elif (seqAlignDict[fastaLabel][14] == qcovhsp):
+                if (seqAlignDict[fastaLabel][2] < pident):
+                    seqAlignDict[fastaLabel] = alignmentData
+        except:
+            seqAlignDict[fastaLabel] = alignmentData
+        #####
+    #####
+
+    # Book keeping
+    for label in seqAlignDict:
+        fh.write("\t".join(seqAlignDict[label]) + "\n")
+
 
 #========================
 def verifyDb(dbLabel):
