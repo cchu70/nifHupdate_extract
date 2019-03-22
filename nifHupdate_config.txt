@@ -1,6 +1,8 @@
-PREFIX  xtract_table
+PREFIX  TAXA
 QUERY   nifH [GENE] NOT UNVERIFIED
-START   2018
+DBNAME    seqDatabase.fasta
+START   2017
 END     2019
 DATETYPE    PDAT
-DBNAME    seqDatabase.fasta
+DATERANGE   true
+SORTTERMS   nifH genome

@@ -19,9 +19,6 @@ import time
 
 import datetime
 
-#==============================================================
-# DEFAULTS
-file_prefix = "xtract_table"
 
 #==============================================================
 def fasta(accession):
