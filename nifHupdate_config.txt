@@ -1,6 +1,7 @@
 PREFIX  TAXA
 QUERY   nifH [GENE] NOT UNVERIFIED
-DBNAME    seqDatabase.fasta
+DBFILE    seqDatabase.fasta
+DBNAME     TAXA_DB
 START   2017
 END     2019
 DATETYPE    PDAT

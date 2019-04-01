@@ -9,7 +9,7 @@ import subprocess
 import time
 from shutil import copyfile
 import datetime
-from sys import argv, stderr
+from sys import argv, stderr, exit
 
 #========================
 # Defaults
@@ -18,7 +18,7 @@ def_tag      = "GENE"
 def_start    = "2012"
 def_end      = "2019"
 def_datetype = "PDAT"
-def_elements = "Id Caption TaxId Slen Organism Title CreateDate"
+def_elements = "Id Caption TaxId Slen CreateDate Organism Title"
 def_sorttype = ["nifH", "genome"]
 
 def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp'
@@ -29,6 +29,12 @@ def_evalue = 0.001
 # Allowed sets
 DATETYPES = set(["PDAT"])
 stages = set(['esearch', 'fasta', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster'])
+
+
+#========================
+def wait(subprocess):
+    while subprocess.poll() == None:
+        time.sleep(2)
 
 #========================
 def createShFile(cmdList, basePath, prefix, stage):
@@ -43,47 +49,45 @@ def createShFile(cmdList, basePath, prefix, stage):
         fh.write("\n")
         for cmd in cmdList:
             fh.write(cmd + "\n")
+            # fh.write("echo " + cmd + "\n")
         #####
     #####
 
-    time.sleep(5)
+    time.sleep(2)
 
     return shFileName
 
 #========================
-def esearchCmds(configDict, year):
+def esearchCmds(configDict, year, outputFile):
 
     esearch  = """esearch -db nucleotide -query \"%s\""""    % (configDict["QUERY"])
-    efilter  = """efilter -mindate %s -maxdate %s -datetype %s""" % (year, year + 1, configDict["DATETYPE"])
+    efilter  = """efilter -mindate %s -maxdate %s -datetype %s""" % (year, year, configDict["DATETYPE"])
     efetch_1 = """efetch -format docsum"""
     xtract   = """xtract -pattern DocumentSummary -element %s"""  % (def_elements)
-    edirectCmd = """%s | %s | %s | %s > %s_%s_xtract.txt\n""" % (esearch, efilter, efetch_1, xtract, configDict["PREFIX"], year)
+    edirectCmd = """%s | %s | %s | %s > %s\n""" % (esearch, efilter, efetch_1, xtract, outputFile)
 
     return edirectCmd
 
 #========================
-def fastaCmds(configDict, year, grepFilter, fastaFileName):
+def fastaCmds(configDict, esearchFile, grepFilter, basePath, fastaFileName):
 
-    cat = "cat %s_%s_xtract.txt" % (configDict["PREFIX"], year)
+    cat = "cat %s" % (esearchFile)
     acc = """awk 'BEGIN { ORS="," }; { print $2 }'"""
 
 
-    fastaCmd = """%s | grep '%s' | %s | python3 nifHupdate_fasta.py > %s\n""" % (cat, grepFilter, acc, fastaFileName)
-
+    fastaCmd = """%s | grep '%s' | %s | python3 %s/nifHupdate_fasta.py > %s\n""" % (cat, grepFilter, acc, basePath, fastaFileName)
 
     return fastaCmd
 
+def fastaCmds(accession):
+    extract_cmd = """efetch -db nuccore -id %s -format gene_fasta""" % (accession)
+
 
 #========================
-def blastnCmds(configDict, year, source, fofn, fmtString = def_blastnOutfmt):
+def blastnCmds(dbName, fastaFile, blastOutputFile, fmtString = def_blastnOutfmt):
 
-    # fmt = str(outfmtVer) + " ".join([col for col in fmtList])
 
-    fastFileName = "%s_%s.%s.fa" % (configDict["PREFIX"], year, source)
-    outputFile = "%s_%s.%s.blastn.txt" % (configDict["PREFIX"], year, source)
-    fofn.write(outputFile + "\n")
-
-    blastCmd = """blastn -query %s -db %s -outfmt '%s' -evalue %s -out %s\n""" % (fastFileName, configDict["DBNAME"], def_blastnOutfmt, def_evalue, outputFile)
+    blastCmd = """blastn -query %s -db %s -outfmt '%s' -evalue %s -out %s\n""" % (fastaFile, dbName, def_blastnOutfmt, def_evalue, blastOutputFile)
     return blastCmd
 
 #========================
@@ -150,13 +154,15 @@ def mapEsearch(esearchFofn):
         #####
     #####
     return esearchMap
+
 #========================
 def throwError(errorMessage):
-    stderr.write("-----------------\n")
+    stderr.write("\n-----------------\n")
     stderr.write("%s\n" % errorMessage)
     stderr.write("Halting execution\n")
     stderr.write("-----------------\n")
     assert False
+
 
 #========================
 def parseConfig(configFile, basePath):
@@ -241,9 +247,9 @@ def parseConfig(configFile, basePath):
         configDict["DATERANGE"] = False
     # -----------------------------
     try:
-        dbName = "%s/%s" % (basePath, configDict["DBNAME"])
-        if (not isfile(dbName)):
-            throwError("Could not find database fasta file %s" % dbName)
+        dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
+        if (not isfile(dbFile)):
+            throwError("Could not find database fasta file %s" % dbFile)
     except KeyError:
         throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1])
     # -----------------------------
@@ -260,6 +266,7 @@ def parseConfig(configFile, basePath):
 #========================
 def launch(shFileName):
     n = subprocess.Popen(["bash", shFileName])
+    wait(n)
     n.poll()
 
 #========================
@@ -278,4 +285,22 @@ def parseDate(date):
     return year
 
 
+# TESTING
+#========================
+def testPrintFile(fileName):
+    print("\n======== %s =========" % fileName)
+    for line in open(fileName, "r"):
+        print(line.strip())
+    ######
+    print("\n======== %s =========" % fileName)
+    assert False
+
+#========================
+def test(*statements):
+    print("\n==========TESTING===========")
+    for statement in statements:
+        print(statement)
+    #####
+    print("============================")
+    assert False
 
