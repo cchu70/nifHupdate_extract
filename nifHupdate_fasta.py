@@ -7,7 +7,7 @@ from os.path import abspath, join, isfile
 
 from optparse import OptionParser
 
-from nifH_edirect import wait
+from nifHupdate_lib import wait
 
 from sys import stdout, argv, stderr, stdin
 
