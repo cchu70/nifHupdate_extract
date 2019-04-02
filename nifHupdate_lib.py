@@ -80,7 +80,7 @@ def fastaCmds(configDict, esearchFile, grepFilter, basePath, fastaFileName):
     return fastaCmd
 
 def fastaCmds(accession):
-    extract_cmd = """efetch -db nuccore -id %s -format gene_fasta""" % (accession)
+    extract_cmd = """efetch -db nuccore -id %s -format gene_fasta > python3 %s/nifHupdate_fasta.py""" % (accession)
 
 
 #========================

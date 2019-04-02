@@ -2,7 +2,7 @@
 __author__="Claudia Chu"
 __date__ ="2/24/19"
 
-from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, throwError, verifyDb, test, testPrintFile
+from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, throwError, verifyDb, test, testPrintFile, wait
 
 from os.path import abspath, join, isfile
 
@@ -11,6 +11,8 @@ from optparse import OptionParser
 from os import curdir, system, stat
 
 from sys import stdout
+
+from Bio import SeqIO
 
 import time
 
@@ -136,8 +138,9 @@ def real_main():
                 # Make the fasta commands
                 prefix = esearchFile.split(".")[0]
                 for sortterm in configDict["SORTTERMS"]:
+
                     fastaFileName = "%s.%s.fasta" % (prefix, sortterm)
-                    fh.write(fastaFileName) # record fasta file names
+                    fh.write("Retrieving fasta File: %s" % fastaFileName) # record fasta file names
 
                     # OLD
                     # CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
@@ -145,21 +148,25 @@ def real_main():
 
                     # MODIFYING #
                     fastaFileHandle = open(fastaFileName, "w")
-                    for line in open(fastaFileName, "r"):
-                        tmpFileHandle = open("tmp.fasta", "w")
-                        recId, acc, taxId, slen, date, organism, title = line.strip().split("\t")
-                        print("Accession number: %s" % acc)
-                        assert False
-                        fastaCmd = """efetch -db nuccore -id %s -format gene_fasta > python3 %s/nifHupdate_fasta.py""" % (accession)
-                        n = subprocess.Popen(fastaCmd, shell=True, stdin = subprocess.PIPE, stdout = tmpFileHandle)
-                        wait(n)
-                        n.kill()
+                    print(fastaFileName)
+                    for line in open(esearchFile.strip(), "r"):
+                        if (sortterm in line):
+                            tmpFileHandle = open("tmp.fasta", "w")
+                            recId, acc, taxId, slen, date, organism, title = line.strip().split("\t")
+                            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta""" % (acc)
 
-                        for record in SeqIO.parse("tmp.fasta", "fasta"):
-                            record.description = "[Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (date, organism, title, taxId)
-                            record.id = acc
-                            SeqIO.write(record, fastaFileHandle, "fasta")
+                            n = subprocess.Popen(fastaCmd, shell=True, stdin = subprocess.PIPE, stdout = tmpFileHandle)
+                            wait(n)
+                            n.kill()
 
+                            for record in SeqIO.parse("tmp.fasta", "fasta"):
+                                record.description = "[Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (date, organism, title, taxId)
+                                record.id = acc
+                                SeqIO.write(record, fastaFileHandle, "fasta")
+                                print("Record ID: %s" % record.id)
+                            #####
+                        #####
+                    #####
                 #####
             #####
         #####
