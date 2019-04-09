@@ -2,7 +2,7 @@
 __author__="Claudia Chu"
 __date__ ="2/24/19"
 
-from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, throwError, verifyDb, test, testPrintFile, wait
+from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, throwError, verifyDb, test, testPrintFile, wait, fasta
 
 from os.path import abspath, join, isfile
 
@@ -19,6 +19,8 @@ import time
 import subprocess
 
 from sys import argv, stderr
+
+import threading
 
 # ======================================================
 
@@ -128,6 +130,9 @@ def real_main():
         if (not isfile(esearchFofn)):
             throwError("esearch stage failed: %s not found" % esearchFofn)
         else:
+
+
+            threads = []
             for esearchFile in open(esearchFofn, "r"):
                 if (not isfile(esearchFile.strip())):
                     throwError("esearch stage failed: %s not found" % file)
@@ -138,35 +143,20 @@ def real_main():
                 # Make the fasta commands
                 prefix = esearchFile.split(".")[0]
                 for sortterm in configDict["SORTTERMS"]:
-
                     fastaFileName = "%s.%s.fasta" % (prefix, sortterm)
-                    fh.write("Retrieving fasta File: %s" % fastaFileName) # record fasta file names
+                    fh.write("%s\n" % fastaFileName) # record fasta file names
+
+                    print("Retrieving %s" % fastaFileName)
 
                     # OLD
-                    # CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
-                    # CMDLIST.append(fastaCmds(configDict, esearchFile.strip(), sortterm, basePath, fastaFileName))
+                    CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
+                    CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
 
-                    # MODIFYING #
-                    fastaFileHandle = open(fastaFileName, "w")
-                    print(fastaFileName)
-                    for line in open(esearchFile.strip(), "r"):
-                        if (sortterm in line):
-                            tmpFileHandle = open("tmp.fasta", "w")
-                            recId, acc, taxId, slen, date, organism, title = line.strip().split("\t")
-                            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta""" % (acc)
+                    # t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
+                    # threads.append(t)
+                    # t.start()
 
-                            n = subprocess.Popen(fastaCmd, shell=True, stdin = subprocess.PIPE, stdout = tmpFileHandle)
-                            wait(n)
-                            n.kill()
-
-                            for record in SeqIO.parse("tmp.fasta", "fasta"):
-                                record.description = "[Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (date, organism, title, taxId)
-                                record.id = acc
-                                SeqIO.write(record, fastaFileHandle, "fasta")
-                                print("Record ID: %s" % record.id)
-                            #####
-                        #####
-                    #####
+                    #fasta(esearchFile.strip(), sortterm, fastaFileName)
                 #####
             #####
         #####
@@ -180,18 +170,18 @@ def real_main():
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
 
-        # TESTING
-        testPrintFile(shFileName)
-        ######
+        # # TESTING
+        # testPrintFile(shFileName)
+        # ######
         launch(shFileName)
 
 # ================= STAGE 3 ===================== #
 # Check if all the files exist for a local database for stand alone alignment
 
     elif (stage == 'set_db'):
-        # # TESTING
-        # test("In set_db!")
-        # ######
+        # TESTING
+        test("In set_db!")
+        ######
 
         # check database already exists
         if (not verifyDb(configDict["DBFILE"])):
@@ -306,6 +296,9 @@ def real_main():
         # >AF484654;cluster_I;Mesorhizobium_sp._LMG_11892
 
         # for fastaFile in open("fa_list.txt", "r"):
+        fastaFofn = "%s.fasta.fofn" % PREFIX
+        #for fastaFile in open(fastaFofn, "r"):
+
 
 
         CMDLIST.append(nextCmd)
