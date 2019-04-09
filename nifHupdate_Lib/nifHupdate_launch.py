@@ -103,7 +103,7 @@ def real_main():
         # Next stage
         nextStage = 'fasta'
         echoCmd = "echo Launching next stage %s" % nextStage
-        nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
         CMDLIST.append(echoCmd)
         CMDLIST.append(nextCmd)
 
@@ -148,25 +148,29 @@ def real_main():
 
                     print("Retrieving %s" % fastaFileName)
 
-                    # OLD
-                    CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
-                    CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
+                    # # OLD
+                    # CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
+                    # CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
 
-                    # t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
-                    # threads.append(t)
-                    # t.start()
-
+                    t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
+                    threads.append(t)
+                    t.start()
+                    t.join()
                     #fasta(esearchFile.strip(), sortterm, fastaFileName)
                 #####
             #####
         #####
+        # # wait for threads to finish
+        # while (not t.isAlive() for t in threads):
+        #     time.sleep(5);
+        #     print("still alive")
 
         fh.close()
 
 
         # Next stage
         nextStage = 'set_db'
-        nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
 
@@ -191,7 +195,7 @@ def real_main():
         #####
 
         nextStage = 'blastn'
-        nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s" % (basePath, configFile, nextStage, basePath)
         CMDLIST.append(nextCmd)
 
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
@@ -228,7 +232,7 @@ def real_main():
         #####
 
         nextStage = 'filter_best_alignments'
-        nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
@@ -264,7 +268,7 @@ def real_main():
         #####
 
         nextStage = 'trim_seq'
-        nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)

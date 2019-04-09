@@ -1,2 +1,4 @@
 *.fa*
 *.fasta*
+venv
+TAXA*

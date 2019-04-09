@@ -76,7 +76,7 @@ def fastaCmds(esearchFile, grepFilter, basePath, fastaFileName):
     acc = """awk 'BEGIN { ORS="," }; { print $2 }'"""
 
 
-    fastaCmd = """%s | grep '%s' | %s | python3 %s/nifHupdate_fasta.py > %s\n""" % (cat, grepFilter, acc, basePath, fastaFileName)
+    fastaCmd = """%s | grep '%s' | %s | python3 %s/nifHupdate_Lib/nifHupdate_fasta.py > %s\n""" % (cat, grepFilter, acc, basePath, fastaFileName)
 
     return fastaCmd
 
