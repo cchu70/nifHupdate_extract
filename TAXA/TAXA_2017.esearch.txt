@@ -1,3 +1,4 @@
+1208935457	NZ_CP021813	382	1454983	2017/06/21	Sinorhizobium meliloti	Sinorhizobium meliloti strain M270 plasmid psymA, complete sequence
 1197920300	NZ_MTAX01000022	1932668	51451	2017/05/24	Nostoc sp. RF31YmG	Nostoc sp. RF31YmG NODE_385_length_51395_cov_15.135635, whole genome shotgun sequence
 1311609532	NZ_PJDI01000001	2054596	1960538	2017/12/14	Klebsiella sp. J-Nf11	Klebsiella sp. J-Nf11 NODE_1_length_1960538_cov_13.4031, whole genome shotgun sequence
 1311473724	NZ_PJDK01000097	2057804	16684	2017/12/14	Klebsiella sp. X1-16S-Nf21	Klebsiella sp. X1-16S-Nf21 NODE_97_length_16684_cov_14.978921, whole genome shotgun sequence
@@ -40,7 +41,6 @@
 1223936884	NZ_FMAI01000005	1761772	410431	2016/08/03	Bradyrhizobium shewense	Bradyrhizobium shewense strain ERR11, whole genome shotgun sequence
 1223248336	NZ_FAOZ01000004	795642	519204	2015/11/23	Frankia irregularis	Frankia irregularis strain DSM 45899, whole genome shotgun sequence
 1154794614	NZ_FUXL01000009	1365950	190021	2017/03/04	Consotaella salsifontis	Consotaella salsifontis strain USBA 369, whole genome shotgun sequence
-1145343094	NZ_MNPM01000029	1594576	68519	2017/02/11	Mastigocladus laminosus UU774	Mastigocladus laminosus UU774 strain 74 scaffold_28, whole genome shotgun sequence
 1140990999	NZ_MOWP01000009	1745382	333039	2017/02/03	Frankia sp. CcI49	Frankia sp. CcI49 contig_8, whole genome shotgun sequence
 1229240681	NZ_MBKP01000025	1874706	26774	2017/08/09	Methanolobus psychrotolerans	Methanolobus psychrotolerans strain YSF-03 NODE_26_length_26544_cov_42.234402, whole genome shotgun sequence
 1197984224	NZ_CP020847	244366	5554150	2017/05/25	Klebsiella variicola	Klebsiella variicola strain KPN1481 chromosome, complete genome

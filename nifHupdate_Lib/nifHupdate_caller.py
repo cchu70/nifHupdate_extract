@@ -93,7 +93,7 @@ def real_main():
 
     # Continue adding commands
     cdFolder  = "cd %s" % (configDict["PREFIX"])
-    launchCmd = "python3 %s/nifHupdate_launch.py %s %s %s" % (basePath, configFile, nextStep, basePath)
+    launchCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s" % (basePath, configFile, nextStep, basePath)
 
     cmdList.append(cdFolder)
     cmdList.append(launchCmd)
