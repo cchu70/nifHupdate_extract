@@ -3,7 +3,7 @@ QUERY   nifH [GENE] NOT UNVERIFIED
 DBFILE    seqDatabase.fasta
 DBNAME     TAXA_DB
 START   2017
-END     2019
+END     2018
 DATETYPE    PDAT
 DATERANGE   true
 SORTTERMS   nifH genome

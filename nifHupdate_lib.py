@@ -29,6 +29,7 @@ def_evalue = 0.001
 # Allowed sets
 DATETYPES = set(["PDAT"])
 stages = set(['esearch', 'fasta', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster'])
+MAX_REUQUESTS = 3 # for entrex direct
 
 
 #========================
@@ -43,7 +44,7 @@ def createShFile(cmdList, basePath, prefix, stage):
 
     with open(shFileName, "w") as fh:
 
-        now = now = datetime.datetime.now()
+        now = datetime.datetime.now()
         fh.write("#!/bin/bash\n")
         fh.write("# %s\n" % str(now))
         fh.write("\n")
@@ -69,7 +70,7 @@ def esearchCmds(configDict, year, outputFile):
     return edirectCmd
 
 #========================
-def fastaCmds(configDict, esearchFile, grepFilter, basePath, fastaFileName):
+def fastaCmds(esearchFile, grepFilter, basePath, fastaFileName):
 
     cat = "cat %s" % (esearchFile)
     acc = """awk 'BEGIN { ORS="," }; { print $2 }'"""
@@ -79,9 +80,37 @@ def fastaCmds(configDict, esearchFile, grepFilter, basePath, fastaFileName):
 
     return fastaCmd
 
-def fastaCmds(accession):
-    extract_cmd = """efetch -db nuccore -id %s -format gene_fasta > python3 %s/nifHupdate_fasta.py""" % (accession)
+def fasta(esearchFile, sortterm, outputFasta):
+    fastaFileHandle = open(outputFasta, "w")
 
+    requestCont = 0
+    for line in open(esearchFile.strip(), "r"):
+        if (sortterm in line):
+            tmpName = "tmp.%s" % outputFasta
+            tmpFileHandle = open(tmpName, "w")
+            recId, acc, taxId, slen, date, organism, title = line.strip().split("\t")
+            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta""" % (acc)
+
+            n = subprocess.Popen(fastaCmd, shell=True, stdin = subprocess.PIPE, stdout = tmpFileHandle)
+            wait(n)
+            n.kill()
+
+            requestCont += 1 # increment count
+
+            if (requestCont == MAX_REUQUESTS ):
+                time.sleep(1)
+                requestCont = 0
+            #####
+
+            i = 1
+            for record in SeqIO.parse(tmpName, "fasta"):
+                record.description = "[Acc: %s] [Ver: %d] [Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (record.id, i, date, organism, title, taxId)
+                record.id = acc
+                SeqIO.write(record, fastaFileHandle, "fasta")
+                i += 1
+            #####
+        #####
+    #####
 
 #========================
 def blastnCmds(dbName, fastaFile, blastOutputFile, fmtString = def_blastnOutfmt):
@@ -158,6 +187,7 @@ def mapEsearch(esearchFofn):
 #========================
 def throwError(errorMessage):
     stderr.write("\n-----------------\n")
+    stderr.write("Time: %s\n" % datetime.datetime.now())
     stderr.write("%s\n" % errorMessage)
     stderr.write("Halting execution\n")
     stderr.write("-----------------\n")
@@ -266,7 +296,7 @@ def parseConfig(configFile, basePath):
 #========================
 def launch(shFileName):
     n = subprocess.Popen(["bash", shFileName])
-    wait(n)
+    wait(n) # wait for the shfile to finish running before proceeding
     n.poll()
 
 #========================

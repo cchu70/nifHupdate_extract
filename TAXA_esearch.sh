@@ -1,12 +1,12 @@
 #!/bin/bash
-# 2019-03-29 12:43:57.766726
+# 2019-04-03 10:34:20.498806
 
 echo esearch for year 2017...
-esearch -db nucleotide -query "nifH [GENE] NOT UNVERIFIED" | efilter -mindate 2017 -maxdate 2017 -datetype PDAT | efetch -format docsum | xtract -pattern DocumentSummary -element Id Caption TaxId Slen Organism Title CreateDate > TAXA_2017.esearch.txt
+esearch -db nucleotide -query "nifH [GENE] NOT UNVERIFIED" | efilter -mindate 2017 -maxdate 2017 -datetype PDAT | efetch -format docsum | xtract -pattern DocumentSummary -element Id Caption TaxId Slen CreateDate Organism Title > TAXA_2017.esearch.txt
 
 
 echo esearch for year 2018...
-esearch -db nucleotide -query "nifH [GENE] NOT UNVERIFIED" | efilter -mindate 2018 -maxdate 2018 -datetype PDAT | efetch -format docsum | xtract -pattern DocumentSummary -element Id Caption TaxId Slen Organism Title CreateDate > TAXA_2018.esearch.txt
+esearch -db nucleotide -query "nifH [GENE] NOT UNVERIFIED" | efilter -mindate 2018 -maxdate 2018 -datetype PDAT | efetch -format docsum | xtract -pattern DocumentSummary -element Id Caption TaxId Slen CreateDate Organism Title > TAXA_2018.esearch.txt
 
 
 echo Launching next stage fasta
