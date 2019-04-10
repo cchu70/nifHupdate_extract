@@ -6,4 +6,4 @@ START   2017
 END     2018
 DATETYPE    PDAT
 DATERANGE   true
-SORTTERMS   nifH genome
+SORTTERMS   genome nifH

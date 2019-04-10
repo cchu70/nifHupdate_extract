@@ -73,15 +73,9 @@ def real_main():
 
     if (stage == 'esearch'):
 
-        # TESTING
-        # test("In Esearch!")
-        ######
-
         # Track esearch text files
         esearchFofn = "%s.esearch.fofn" % PREFIX
         fh = open(esearchFofn, "w")
-
-
 
         for year in range (startDate, endDate):
             outputfile = "%s_%s.esearch.txt\n" % (PREFIX, year)
@@ -183,9 +177,9 @@ def real_main():
 # Check if all the files exist for a local database for stand alone alignment
 
     elif (stage == 'set_db'):
-        # TESTING
-        test("In set_db!")
-        ######
+        # # TESTING
+        # test("In set_db!")
+        # ######
 
         # check database already exists
         if (not verifyDb(configDict["DBFILE"])):
