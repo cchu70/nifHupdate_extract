@@ -146,6 +146,7 @@ def real_main():
                     if sortterm == "nifH":
                         CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
                         CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
+                        print("getting %s" % esearchFile)
                     else:
                         t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
                         threads.append(t)

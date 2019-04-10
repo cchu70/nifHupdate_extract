@@ -124,6 +124,7 @@ def fasta(esearchFile, sortterm, outputFasta):
                     record.description = "[Acc: %s] [Ver: %d] [Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (record.id, i, date, organism, title, taxId)
                     record.id = acc
                     SeqIO.write(record, fastaFileHandle, "fasta")
+                    print(record.id)
                     i += 1
             #####
         #####
