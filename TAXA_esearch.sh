@@ -1,5 +1,5 @@
 #!/bin/bash
-# 2019-04-09 12:51:24.435428
+# 2019-04-10 14:50:44.549339
 
 echo esearch for year 2017...
 esearch -db nucleotide -query "nifH [GENE] NOT UNVERIFIED" | efilter -mindate 2017 -maxdate 2017 -datetype PDAT | efetch -format docsum | xtract -pattern DocumentSummary -element Id Caption TaxId Slen CreateDate Organism Title > TAXA_2017.esearch.txt

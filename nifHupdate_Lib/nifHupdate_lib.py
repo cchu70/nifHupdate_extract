@@ -104,10 +104,11 @@ def fasta(esearchFile, sortterm, outputFasta):
 
             i = 1
             for record in SeqIO.parse(tmpName, "fasta"):
-                record.description = "[Acc: %s] [Ver: %d] [Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (record.id, i, date, organism, title, taxId)
-                record.id = acc
-                SeqIO.write(record, fastaFileHandle, "fasta")
-                i += 1
+                if (sortterm in record.description):
+                    record.description = "[Acc: %s] [Ver: %d] [Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (record.id, i, date, organism, title, taxId)
+                    record.id = acc
+                    SeqIO.write(record, fastaFileHandle, "fasta")
+                    i += 1
             #####
         #####
     #####
