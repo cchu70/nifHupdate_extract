@@ -126,7 +126,7 @@ def real_main():
 
         fastaFofn = "%s.fasta.fofn" % PREFIX
         fh = open(fastaFofn, "w")
-        esearchFofn = "%s.esearch.fofn" % PREFIX
+        esearchFofn = "%s/%s/%s.esearch.fofn" % (basePath, PREFIX, PREFIX)
         if (not isfile(esearchFofn)):
             throwError("esearch stage failed: %s not found" % esearchFofn)
         else:
