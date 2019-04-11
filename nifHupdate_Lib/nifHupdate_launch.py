@@ -43,12 +43,6 @@ def real_main():
     # test("ConfigFile %s" % configFile.split("/")[-1], "stage %s" % stage, "basePath %s" % basePath)
     ######
 
-    # Read the config file
-    configDict = parseConfig(configFile, basePath)
-
-    # Get numerical year
-    startDate = parseDate(configDict["START"])
-    endDate = parseDate(configDict["END"])
 
     # for year in range(startDate, endDate):
     #     if (year == startDate):
@@ -57,17 +51,26 @@ def real_main():
     #         startDate = configDict["END"]
 
 
-    # FREQUENTLY USED CONSTANTS AND VARIABLES
-    CMDLIST = []
-    PREFIX = configDict["PREFIX"]
+
 
     # tracking time
     logFileHandle = open(logFile, "a")
     logFileHandle.write("================================\n")
     logFileHandle.write("Stage: %s\n" % stage)
     logFileHandle.write("Time: %s\n" % datetime.datetime.now())
-    t = time.time()
+    tic = time.process_time()
 
+
+    # Read the config file
+    configDict = parseConfig(configFile, basePath, logFileHandle)
+
+    # Get numerical year
+    startDate = parseDate(configDict["START"])
+    endDate = parseDate(configDict["END"])
+
+    # FREQUENTLY USED CONSTANTS AND VARIABLES
+    CMDLIST = []
+    PREFIX = configDict["PREFIX"]
 
 
     # # Move into current running directory
@@ -169,6 +172,10 @@ def real_main():
         #####
 
         fh.close()
+
+        # testing the time it takes to run
+        elapsed = time.process_time() - tic
+        logFileHandle.write("Time elapsed: %d" % elapsed)
 
 
         # clean tmp files
@@ -319,10 +326,6 @@ def real_main():
 
 
     # Reading stderr
-
-    elapsed = time.time() - t
-
-    logFileHandle.write("Time elapsed: %d" % elapsed)
 
 
     return 0
