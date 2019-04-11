@@ -2,3 +2,5 @@
 *.fasta*
 venv
 TAXA*
+*.sh
+*.pyc
