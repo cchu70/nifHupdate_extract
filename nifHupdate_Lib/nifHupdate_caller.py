@@ -64,11 +64,13 @@ def real_main():
 
     try:
         logFile = argv[2]
-        logFileFh = open(logFile, "a")
+
     except:
         print("Please provide the path to log file")
         assert False
     #####
+
+    logFileFh = open(logFile, "a")
 
     # Setting the config file name
     configFile = "%s/%s" % (basePath, configFileName)
