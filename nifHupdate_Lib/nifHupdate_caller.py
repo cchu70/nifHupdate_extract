@@ -51,7 +51,8 @@ def real_main():
 
     # Check if stage is valid
     if nextStep not in stages:
-        throwError("'%s' is not a valid stage." % nextStep)
+        print("'%s' is not a valid stage." % nextStep)
+        assert False
     #####
 
     try:
@@ -89,7 +90,8 @@ def real_main():
         #####
         if (not confirmDir):
             print("Cancelled")
-            //throwError("Cancelled", )
+            assert False
+            # throwError("Cancelled", )
         #####
     else:
         if (confirmDir):
