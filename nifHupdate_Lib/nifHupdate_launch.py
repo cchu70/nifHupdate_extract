@@ -266,7 +266,7 @@ def real_main():
 
     elif (stage == 'trim_seq'):
         #TESTING
-        test("In filter_best_alignments!")
+        test("In trim_seq!")
         ######
 
         nextStage = 'end'
