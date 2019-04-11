@@ -238,9 +238,6 @@ def real_main():
 # Parsing through blastn tables to find best alignment for each sequence
 
     elif (stage == 'filter_best_alignments'):
-        # TESTING
-        test("In filter_best_alignments!")
-        ######
 
         fofnFileName = "%s.blastnFiles.fofn" % (PREFIX)
         if (not isfile(fofnFileName)) :
