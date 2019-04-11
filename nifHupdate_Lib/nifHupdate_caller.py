@@ -88,7 +88,8 @@ def real_main():
             confirmDir = "y" == confirm
         #####
         if (not confirmDir):
-            throwError("Cancelled")
+            print("Cancelled")
+            //throwError("Cancelled", )
         #####
     else:
         if (confirmDir):
