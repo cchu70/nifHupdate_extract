@@ -265,8 +265,10 @@ def real_main():
 # ================= STAGE 6 ===================== #
 
     elif (stage == 'trim_seq'):
+        TESTING
+        test("In filter_best_alignments!")
+        ######
 
-        assert False
         nextStage = 'end'
         nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
 
