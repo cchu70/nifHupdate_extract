@@ -160,9 +160,12 @@ def real_main():
         fh.close()
 
 
+        # clean tmp files
+        rmCmd = "rm tmp*"
         # Next stage
         nextStage = 'set_db'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        CMDLIST.append(rmCmd)
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
 
@@ -239,7 +242,7 @@ def real_main():
         test("In filter_best_alignments!")
         ######
 
-        fofnFileName = "%s.blastnFiles.fofn" % (configDict["PREFIX"])
+        fofnFileName = "%s.blastnFiles.fofn" % (PREFIX)
         if (not isfile(fofnFileName)) :
             throwError("%s is not available. Either re-run blastn stage, or cat all your blastn files into this file name." % fofnFileName)
         #####
