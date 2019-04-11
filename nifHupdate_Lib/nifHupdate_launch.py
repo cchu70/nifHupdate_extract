@@ -148,18 +148,14 @@ def real_main():
                         CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
                         print("getting %s" % esearchFile)
                     else:
+                        # just one accession at a time
                         t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
                         threads.append(t)
                         t.start()
                         t.join()
-                    #fasta(esearchFile.strip(), sortterm, fastaFileName)
                 #####
             #####
         #####
-        # # wait for threads to finish
-        # while (not t.isAlive() for t in threads):
-        #     time.sleep(5);
-        #     print("still alive")
 
         fh.close()
 
@@ -232,10 +228,6 @@ def real_main():
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
-
-        # TESTING
-        testPrintFile(shFileName)
-        ######
 
         launch(shFileName)
 
