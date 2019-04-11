@@ -244,16 +244,18 @@ def real_main():
             throwError("%s is not available. Either re-run blastn stage, or cat all your blastn files into this file name." % fofnFileName)
         #####
 
-        for sortterm in configDict["SORTTERMS"]:
-            fileName = "%s.%s.blastn.txt" % (configDict["PREFIX"], sortterm)
-            fh = open(fileName, "w")
-            for blastnFile in open(fofnFileName, "r"):
-                if sortterm in blastnFile:
-                    bestAlignment(blastnFile.strip(), fh)
-                #####
+
+        for blastnFile in open(fofnFileName, "r"):
+            if sortterm in blastnFile:
+                prefix, source, end = fastaFile.strip().split(".")
+                fileName = "%s.%s.blastn.txt" % (prefix, source)
+                fh = open(fileName, "w")
+                bestAlignment(blastnFile.strip(), fh)
+                fh.close()
             #####
-            fh.close()
         #####
+
+
 
         nextStage = 'trim_seq'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
