@@ -209,6 +209,7 @@ def throwError(errorMessage, fh):
     fh.write("%s\n" % errorMessage)
     fh.write("Halting execution\n")
     fh.write("-----------------\n")
+    stderr.write("%s\n" % errorMessage)
     assert False
 
 
