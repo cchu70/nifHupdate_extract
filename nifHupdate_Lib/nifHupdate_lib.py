@@ -203,12 +203,12 @@ def mapEsearch(esearchFofn):
     return esearchMap
 
 #========================
-def throwError(errorMessage):
-    stderr.write("\n-----------------\n")
-    stderr.write("Time: %s\n" % datetime.datetime.now())
-    stderr.write("%s\n" % errorMessage)
-    stderr.write("Halting execution\n")
-    stderr.write("-----------------\n")
+def throwError(errorMessage, fh):
+    fh.write("\n-----------------\n")
+    fh.write("Time: %s\n" % datetime.datetime.now())
+    fh.write("%s\n" % errorMessage)
+    fh.write("Halting execution\n")
+    fh.write("-----------------\n")
     assert False
 
 

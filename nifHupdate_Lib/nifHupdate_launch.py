@@ -16,6 +16,8 @@ from Bio import SeqIO
 
 import time
 
+import datetime
+
 import subprocess
 
 from sys import argv, stderr
@@ -35,6 +37,7 @@ def real_main():
     configFile  = argv[1]
     stage       = argv[2]
     basePath    = argv[3]
+    logFile     = argv[4]
 
     # TESTING
     # test("ConfigFile %s" % configFile.split("/")[-1], "stage %s" % stage, "basePath %s" % basePath)
@@ -57,6 +60,14 @@ def real_main():
     # FREQUENTLY USED CONSTANTS AND VARIABLES
     CMDLIST = []
     PREFIX = configDict["PREFIX"]
+
+    # tracking time
+    logFileHandle = open(logFile, "a")
+    logFileHandle.write("================================\n")
+    logFileHandle.write("Stage: %s\n" % stage)
+    logFileHandle.write("Time: %s\n" % datetime.datetime.now())
+    t = time.time()
+
 
 
     # # Move into current running directory
@@ -97,7 +108,7 @@ def real_main():
         # Next stage
         nextStage = 'fasta'
         echoCmd = "echo Launching next stage %s" % nextStage
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
         CMDLIST.append(echoCmd)
         CMDLIST.append(nextCmd)
 
@@ -122,16 +133,16 @@ def real_main():
         fh = open(fastaFofn, "w")
         esearchFofn = "%s/%s/%s.esearch.fofn" % (basePath, PREFIX, PREFIX)
         if (not isfile(esearchFofn)):
-            throwError("esearch stage failed: %s not found" % esearchFofn)
+            throwError("esearch stage failed: %s not found" % esearchFofn, logFileHandle)
         else:
 
 
             threads = []
             for esearchFile in open(esearchFofn, "r"):
                 if (not isfile(esearchFile.strip())):
-                    throwError("esearch stage failed: %s not found" % file)
+                    throwError("esearch stage failed: %s not found" % file, logFileHandle)
                 elif (not stat(esearchFile.strip())):
-                    throwError("esearch stage failed: %s empty" % file)
+                    throwError("esearch stage failed: %s empty" % file, logFileHandle)
                 #####
 
                 # Make the fasta commands
@@ -164,7 +175,7 @@ def real_main():
         rmCmd = "rm tmp*"
         # Next stage
         nextStage = 'set_db'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
         CMDLIST.append(rmCmd)
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
@@ -190,7 +201,7 @@ def real_main():
         #####
 
         nextStage = 'blastn'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s" % (basePath, configFile, nextStage, basePath)
         CMDLIST.append(nextCmd)
 
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
@@ -210,7 +221,7 @@ def real_main():
 
         fastaFofn = "%s.fasta.fofn" % PREFIX
         if (not isfile(fastaFofn)):
-            throwError("fasta stage failed: %s not found" % esearchFofn)
+            throwError("fasta stage failed: %s not found" % esearchFofn, logFileHandle)
         else:
 
             fofnFileName = "%s.blastnFiles.fofn" % (PREFIX)
@@ -227,7 +238,7 @@ def real_main():
         #####
 
         nextStage = 'filter_best_alignments'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
@@ -241,7 +252,7 @@ def real_main():
 
         fofnFileName = "%s.blastnFiles.fofn" % (PREFIX)
         if (not isfile(fofnFileName)) :
-            throwError("%s is not available. Either re-run blastn stage, or cat all your blastn files into this file name." % fofnFileName)
+            throwError("%s is not available. Either re-run blastn stage, or cat all your blastn files into this file name." % fofnFileName, logFileHandle)
         #####
 
 
@@ -257,7 +268,7 @@ def real_main():
 
 
         nextStage = 'trim_seq'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
@@ -271,7 +282,7 @@ def real_main():
         ######
 
         nextStage = 'end'
-        nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s\n" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
         # parse the blastn files into a map
         blastnFofn = "%s.blastn.fofn" % (configDict["PREFIX"])
@@ -308,6 +319,10 @@ def real_main():
 
 
     # Reading stderr
+
+    elapsed = time.time() - t
+
+    logFileHandle.write("Time elapsed: %d" % elapsed)
 
 
     return 0

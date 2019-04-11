@@ -61,6 +61,13 @@ def real_main():
         assert False
     #####
 
+    try:
+        logFile = argv[2]
+    except:
+        print("Please provide the path to log file")
+        assert False
+    #####
+
     # Setting the config file name
     configFile = "%s/%s" % (basePath, configFileName)
 
@@ -93,7 +100,7 @@ def real_main():
 
     # Continue adding commands
     cdFolder  = "cd %s" % (configDict["PREFIX"])
-    launchCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s" % (basePath, configFile, nextStep, basePath)
+    launchCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s" % (basePath, configFile, nextStep, basePath, logFile)
 
     cmdList.append(cdFolder)
     cmdList.append(launchCmd)
