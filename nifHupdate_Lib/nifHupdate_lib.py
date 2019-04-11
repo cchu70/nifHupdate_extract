@@ -203,7 +203,7 @@ def mapEsearch(esearchFofn):
     return esearchMap
 
 #========================
-def throwError(errorMessage, fh):
+def throwError(errorMessage, fh), logFileFh:
     fh.write("\n-----------------\n")
     fh.write("Time: %s\n" % datetime.datetime.now())
     fh.write("%s\n" % errorMessage)
@@ -213,10 +213,10 @@ def throwError(errorMessage, fh):
 
 
 #========================
-def parseConfig(configFile, basePath):
+def parseConfig(configFile, basePath, logFileFh):
 
     if ( not isfile(configFile)):
-        throwError("parse_config did not find config file %s" % ( configFile ) )
+        throwError("parse_config did not find config file %s" % ( configFile ) , logFileFh)
 
     configDict = {}
     for line in open(configFile, "r"):
@@ -232,15 +232,15 @@ def parseConfig(configFile, basePath):
     try:
         prefix = configDict["PREFIX"]
     except:
-        throwError("No PREFIX provided in the configuration file %s" % configFile.split("/")[-1])
+        throwError("No PREFIX provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
     # -----------------------------
     # Test QUERY
     try:
         queries = configDict["QUERY"]
     except KeyError:
-        throwError("No QUERY provided in the configuration file %s" % configFile.split("/")[-1])
+        throwError("No QUERY provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
     except:
-        throwError("Improper formatting of query terms in the configuration file %s. \
+        throwError("Improper formatting of query terms in the configuration file %s. , logFileFh\
             Please delimit with semicolons ';'", configFile.split("/")[-1])
     # -----------------------------
     # Test DATERANGE, START, END, and DATETYPE
@@ -251,42 +251,42 @@ def parseConfig(configFile, basePath):
                 start = configDict["START"]
                 end   = configDict["END"]
                 if (parseDate(start) > parseDate(end)):
-                    throwError("Invalid START and END date in Config File %s. \
+                    throwError("Invalid START and END date in Config File %s. , logFileFh\
                         Check that start date is before end date." % configFile.split("/")[-1])
             except KeyError:
-                throwError("Unable to query in date range without specified start and end time. Please provide START and END tags (MM/DD/YYY, MM/YYYY, or YYYY) in the configuration file %s" % configFile.split("/")[-1])
+                throwError("Unable to query in date range without specified start and end time. Please provide START and END tags (MM/DD/YYY, MM/YYYY, or YYYY) in the configuration file %s" % configFile.split("/")[-1], logFileFh)
             #####
 
             try:
                 datetype = configDict["DATETYPE"]
             except KeyError:
-                throwError("Unable to query data in date range without specified datetype. Options are %s" % ",".join(DATETYPES))
+                throwError("Unable to query data in date range without specified datetype. Options are %s" % ",".join(DATETYPES), logFileFh)
             #####
 
             # Everything there
             configDict["DATERANGE"] = True
         else:
-            throwError("%s is not a valid value. Only valid value for DATERANGE is 'true'. Otherwise, do not include the DATERANGE tag.", useDateRange)
+            throwError("%s is not a valid value. Only valid value for DATERANGE is 'true'. Otherwise, do not include the DATERANGE tag.", useDateRange, logFileFh)
         #####
     except KeyError:
         # check if other tags were used
         try:
             start = configDict["START"]
-            throwError("Provided START tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1])
+            throwError("Provided START tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
         except:
             pass
         #####
 
         try:
             end   = configDict["END"]
-            throwError("Provided END tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1])
+            throwError("Provided END tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
         except:
             pass
         #####
 
         try:
             datetype = configDict["DATETYPE"]
-            throwError("Provided DATETYPE tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1])
+            throwError("Provided DATETYPE tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
         except:
             pass
         #####
@@ -297,9 +297,9 @@ def parseConfig(configFile, basePath):
     try:
         dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
         if (not isfile(dbFile)):
-            throwError("Could not find database fasta file %s" % dbFile)
+            throwError("Could not find database fasta file %s" % dbFile, logFileFh)
     except KeyError:
-        throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1])
+        throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
     # -----------------------------
     try:
         x = configDict["SORTTERMS"]

@@ -64,6 +64,7 @@ def real_main():
 
     try:
         logFile = argv[2]
+        logFileFh = open(logFile, "a")
     except:
         print("Please provide the path to log file")
         assert False
@@ -77,7 +78,7 @@ def real_main():
     # Command list
     cmdList = []
 
-    configDict = parseConfig(configFile, basePath)
+    configDict = parseConfig(configFile, basePath, logFileFh)
 
     # Check if directory already exists. Prevent accidental overriding
     confirmDir = True
