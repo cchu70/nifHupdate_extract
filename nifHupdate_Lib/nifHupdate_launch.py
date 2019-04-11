@@ -246,7 +246,7 @@ def real_main():
 
 
         for blastnFile in open(fofnFileName, "r"):
-            prefix, source, end = fastaFile.strip().split(".")
+            prefix, source, end = blastnFile.strip().split(".")
             fileName = "%s.%s.blastn.txt" % (prefix, source)
             fh = open(fileName, "w")
             bestAlignment(blastnFile.strip(), fh)
