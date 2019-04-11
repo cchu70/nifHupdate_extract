@@ -203,7 +203,7 @@ def mapEsearch(esearchFofn):
     return esearchMap
 
 #========================
-def throwError(errorMessage, fh), logFileFh:
+def throwError(errorMessage, fh):
     fh.write("\n-----------------\n")
     fh.write("Time: %s\n" % datetime.datetime.now())
     fh.write("%s\n" % errorMessage)
