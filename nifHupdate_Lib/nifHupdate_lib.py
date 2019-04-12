@@ -211,7 +211,7 @@ def trimSeq(fastaFileName, outputFileHandle, blastItems):
 def mapBlast(blastnFofn):
     blastnMap = {}
     for blastnFile in open(blastnFofn, "r"):
-        for line in open(blastnFile):
+        for line in open(blastnFile.strip(), "r"):
             alignmentData = line.split(None)
             qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp = line.strip().split(None)
             blastItems[qseqid] = BlastAlignment(qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp)
