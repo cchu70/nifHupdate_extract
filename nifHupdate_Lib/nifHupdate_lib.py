@@ -194,6 +194,7 @@ def trimSeq(fastaFileName, outputFileHandle, blastItems):
             cluster = blastnData.sseqid.split(';')[1]
 
             infoDict = {}
+            print(record.description)
             for part in record.description.split("] ["):
                 label, info = part.split(":", 1)
                 infoDict[label] = info
