@@ -214,27 +214,33 @@ def mapBlast(blastnFofn):
         for line in open(blastnFile.strip(), "r"):
             alignmentData = line.split(None)
             qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp = line.strip().split(None)
-            blastItems[qseqid] = BlastAlignment(qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp)
+            blastItems[qseqid] = BlastAlignmentData(qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp)
         #####
     #####
     return blastnMap
 
-#========================
-def mapEsearch(esearchFofn):
-    esearchMap = {}
-
-    for fileName in open(esearchFofn, "r"):
-        for record in open(fileName.strip(), "r"):
-            xtractData = line.split("\t")
-            recordAccession = xtractData[1]
-            description = xtractData[3]
-
-            if recordAccession not in esearchMap:
-                esearchMap[recordAccession] = description
-            #####
-        #####
-    #####
-    return esearchMap
+# ====================================================================
+custom_fields = ['qseqid', 'sseqid', 'pident', 'length', 'qlen', 'mismatch', 'gapopen', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bitscore', 'sstrand', 'qcovhsp']
+class BlastAlignmentData:
+    def __init__(self, qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp):
+        self.qseqid = qseqid
+        self.sseqid = sseqid
+        self.pident = pident
+        self.length = length
+        self.qlen = qlen
+        self.mismatch = mismatch
+        self.gapopen = gapopen
+        self.qstart = qstart
+        self.qend = qend
+        self.qend = qend
+        self.sstart = sstart
+        self.send = send
+        self.evalue = evalue
+        self.bitscore = bitscore
+        self.sstrand = sstrand
+        self.qcovhsp = qcovhsp
+    def show(self):
+        print("%s %s" % (self.pident, self.qcovhsp))
 
 #========================
 def throwError(errorMessage, fh):
@@ -386,4 +392,7 @@ def test(*statements):
     #####
     print("============================")
     assert False
+
+
+
 
