@@ -173,6 +173,40 @@ def verifyDb(dbLabel):
     else:
         return True
 
+
+#========================
+def trimSeq(fastaFileName, outputFileHandle, blastItems):
+    # i = 0
+    for record in SeqIO.parse(fastaFileName.strip(), "fasta"):
+
+        if record.id in blastItems:
+
+            blastnData = blastItems[record.id]
+
+            # check sequence length
+            length = int(blastnData.length)
+            qlen = int(blastnData.qlen)
+            distance = qlen - length
+            if (distance >= 340 and distance <= (0.5 * length)):
+                record.seq = record.seq[int(qstart):int(qend)]
+            #####
+
+            # rewrite header
+            print(blastnData.qseqid)
+            seqID = blastnData.qseqid.split('|')[1].split('.')[0]
+            cluster = blastnData.sseqid.split(';')[1]
+
+
+            infoDict = {}
+            for part in record.description.split("] ["):
+                label, info = part.split(":")
+                infoDict[label] = info
+            #####
+
+            header = "%s;%s;%s" % (seqID, cluster, infoDict["Organism"].strip())
+            record.id = header
+            SeqIO.write(record, outputFileHandle, "fasta")
+
 #========================
 def mapBlast(blastnFofn):
     blastnMap = {}
