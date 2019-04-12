@@ -58,7 +58,7 @@ def real_main():
     logFileHandle.write("================================\n")
     logFileHandle.write("Stage: %s\n" % stage)
     logFileHandle.write("Time: %s\n" % datetime.datetime.now())
-    tic = time.process_time()
+    #tic = time.process_time()
 
 
     # Read the config file
@@ -174,8 +174,7 @@ def real_main():
         fh.close()
 
         # testing the time it takes to run
-        elapsed = time.process_time() - tic
-        logFileHandle.write("Time elapsed: %d" % elapsed)
+        logFileHandle.write("End Time: %s\n" % time.process_time())
 
 
         # clean tmp files
@@ -208,7 +207,7 @@ def real_main():
         #####
 
         nextStage = 'blastn'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s" % (basePath, configFile, nextStage, basePath)
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s" % (basePath, configFile, nextStage, basePath, logFile)
         CMDLIST.append(nextCmd)
 
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
