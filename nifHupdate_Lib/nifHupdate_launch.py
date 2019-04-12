@@ -301,27 +301,70 @@ def real_main():
 
         # >AF484654;cluster_I;Mesorhizobium_sp._LMG_11892
 
-        # for fastaFile in open("fa_list.txt", "r"):
+
+        fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
+        fh = open(fastaTrimmedFofn, "w")
+
         fastaFofn = "%s.fasta.fofn" % PREFIX
         for fastaFile in open(fastaFofn, "r"):
             prefix, source, end = fastaFile.strip().split(".")
 
             trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
-            fh = open(trimFastaFileName, "w")
-            trimSeq(fastaFile, fh, blastnMap)
-            fh.close()
+            fh.write(trimFastaFileName)
+            trimSeq(fastaFile, trimFastaFileName, blastnMap)
+
         #####
+        fh.close()
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
         launch(shFileName)
 
 # ================= STAGE 7 ===================== #
-    #elif (stage == 'cluster'):
-# ================= STAGE 8 ===================== #
-    #elif (stage == 'duplicate'):
-    # cd-hit-dup -i fasta -o output
+    elif (stage == 'cluster'):
 
+        clusterFilesFofn = "%s.cluster_fasta.fofn" % PREFIX
+        ch = open(clusterFilesFofn, "r")
+
+        clusterFileHandles = {}
+
+        fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
+        for fastaTrimmedFileName in open(fastaTrimmedFofn, "r"):
+            prefix, source, end = fastaTrimmedFileName.split(".", 2)
+            for record in SeqIO.parse(fastaTrimmedFileName.strip(), "fasta"):
+                cluster = record.id.split(";")[1]
+                try:
+                    fh = clusterFileHandles[cluster]
+                except:
+                    fileName = cluster + ".%s.fasta" % source
+                    try:
+                        fh = open(fileName, "a")
+                        # wont work if the cluster name is weirdly formatted
+                    except:
+                        # rename
+                        fileName = "other.%s.fasta" % source
+                        fh = open(fileName, "a")
+                    #####
+                    ch.write(fileName)
+                    clusterFileHandles[cluster] = fh
+                #####
+
+                SeqIO.write(record, clusterFileHandles[cluster], "fasta")
+
+        nextStage = 'deduplicate'
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
+
+        CMDLIST.append(nextCmd)
+        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
+        launch(shFileName)
+
+# ================= STAGE 8 ===================== #
+    elif (stage == 'deduplicate'):
+    # cd-hit-dup -i fasta -o output
+        clusterFastaFofn = "cluster_fasta.fofn"
+
+        for fastaFile in open(clusterFastaFofn, "r"):
+            deduplicate(fastaFile.strip())
 
     # Reading stderr
 
