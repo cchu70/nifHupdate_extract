@@ -289,7 +289,7 @@ def real_main():
         nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
         # parse the blastn files into a map
-        blastnFofn = "%s.blastn.fofn" % (configDict["PREFIX"])
+        blastnFofn = "%s.blastnFiles.fofn" % (configDict["PREFIX"])
         blastnMap = mapBlast(blastnFofn)
 
         # for each year and each fasta file (fa_list.txt)
