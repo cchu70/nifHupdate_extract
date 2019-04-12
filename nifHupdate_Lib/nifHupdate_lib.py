@@ -214,7 +214,7 @@ def mapBlast(blastnFofn):
         for line in open(blastnFile.strip(), "r"):
             alignmentData = line.split(None)
             qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp = line.strip().split(None)
-            blastItems[qseqid] = BlastAlignmentData(qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp)
+            blastnMap[qseqid] = BlastAlignmentData(qseqid, sseqid, pident, length, qlen, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore, sstrand, qcovhsp)
         #####
     #####
     return blastnMap
