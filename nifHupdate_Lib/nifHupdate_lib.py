@@ -191,24 +191,15 @@ def trimSeq(fastaFileName, outputFileHandle, blastItems):
                 record.seq = record.seq[int(qstart):int(qend)]
             #####
 
-            # rewrite header
-            print(blastnData.qseqid)
-            try:
-                seqID = blastnData.qseqid.split('|')[1].split('.')[0]
-            except:
-                seqID = blastnData.qseqid
-            #####
-
             cluster = blastnData.sseqid.split(';')[1]
-
 
             infoDict = {}
             for part in record.description.split("] ["):
-                label, info = part.split(":")
+                label, info = part.split(":", 1)
                 infoDict[label] = info
             #####
 
-            header = "%s;%s;%s" % (seqID, cluster, infoDict["Organism"].strip())
+            header = "%s;%s;%s" % (record.id, cluster, infoDict["Organism"].strip())
             record.id = header
             SeqIO.write(record, outputFileHandle, "fasta")
 

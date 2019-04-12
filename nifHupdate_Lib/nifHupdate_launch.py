@@ -157,17 +157,17 @@ def real_main():
 
                     print("Retrieving %s" % fastaFileName)
 
-                    # # OLD
-                    if sortterm == "nifH":
-                        CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
-                        CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
-                        print("getting %s" % esearchFile)
-                    else:
-                        # just one accession at a time
-                        t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
-                        threads.append(t)
-                        t.start()
-                        t.join()
+                    # # # OLD
+                    # if sortterm == "nifH":
+                    #     CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
+                    #     CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
+                    #     print("getting %s" % esearchFile)
+                    # else:
+                    #     # just one accession at a time
+                    t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
+                    threads.append(t)
+                    t.start()
+                    t.join()
                 #####
             #####
         #####
@@ -311,8 +311,6 @@ def real_main():
             trimSeq(fastaFile, fh, blastnMap)
             fh.close()
         #####
-
-
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
