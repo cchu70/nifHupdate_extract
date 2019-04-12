@@ -193,7 +193,12 @@ def trimSeq(fastaFileName, outputFileHandle, blastItems):
 
             # rewrite header
             print(blastnData.qseqid)
-            seqID = blastnData.qseqid.split('|')[1].split('.')[0]
+            try:
+                seqID = blastnData.qseqid.split('|')[1].split('.')[0]
+            except:
+                seqID = blastnData.qseqid
+            #####
+
             cluster = blastnData.sseqid.split(';')[1]
 
 
