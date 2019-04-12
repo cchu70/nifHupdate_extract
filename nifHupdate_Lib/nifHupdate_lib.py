@@ -175,8 +175,9 @@ def verifyDb(dbLabel):
 
 
 #========================
-def trimSeq(fastaFileName, outputFileHandle, blastItems):
+def trimSeq(fastaFileName, outputFileName, blastItems):
     # i = 0
+    outputFileHandle = open(outputFileName, "w")
     for record in SeqIO.parse(fastaFileName.strip(), "fasta"):
 
         if record.id in blastItems:
@@ -194,7 +195,6 @@ def trimSeq(fastaFileName, outputFileHandle, blastItems):
             cluster = blastnData.sseqid.split(';')[1]
 
             infoDict = {}
-            print(record.description)
             for part in record.description.split("] ["):
                 label, info = part.split(":", 1)
                 infoDict[label] = info
@@ -239,6 +239,18 @@ class BlastAlignmentData:
     def show(self):
         print("%s %s" % (self.pident, self.qcovhsp))
 
+
+#========================
+def deduplicate(fastaFile):
+    try:
+        cluster, source, x = fastaFile.split(".")
+        outputFile = "%s.%s.dup.fasta" % (cluster, source)
+        cdHitDupCmd = "cd-hit-dup -i %s -o %s" % (fastaFile, outputFile)
+        print(cdHitDupCmd)
+        n = subprocess.Popen(cdHitDupCmd, shell=True)
+        n.poll()
+    except:
+        pass
 #========================
 def throwError(errorMessage, fh):
     fh.write("\n-----------------\n")
