@@ -2,7 +2,7 @@
 __author__="Claudia Chu"
 __date__ ="2/24/19"
 
-from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, throwError, verifyDb, test, testPrintFile, wait, fasta
+from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq
 
 from os.path import abspath, join, isfile
 
@@ -293,10 +293,6 @@ def real_main():
         # parse the blastn files into a map
         blastnFofn = "%s.blastn.fofn" % (configDict["PREFIX"])
         blastnMap = mapBlast(blastnFofn)
-        # parse the esearch files into a map
-        esearchFofn = "%s.esearch.fofn" % (configDict["PREFIX"])
-        esearchMap = mapEsearch(esearchFofn)
-
 
         # for each year and each fasta file (fa_list.txt)
         # 1) get the accession number
@@ -309,7 +305,14 @@ def real_main():
 
         # for fastaFile in open("fa_list.txt", "r"):
         fastaFofn = "%s.fasta.fofn" % PREFIX
-        #for fastaFile in open(fastaFofn, "r"):
+        for fastaFile in open(fastaFofn, "r"):
+            prefix, source, end = fastaFile.strip().split(".")
+
+            trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
+            fh = open(trimFastaFileName, "w")
+            trimSeq(fastaFile, fh, blastnMap)
+            fh.close()
+        #####
 
 
 
