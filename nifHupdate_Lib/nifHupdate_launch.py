@@ -288,8 +288,7 @@ def real_main():
 
     elif (stage == 'trim_seq'):
 
-        nextStage = 'end'
-        nextCmd = "python3 %s/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
+
 
         # parse the blastn files into a map
         blastnFofn = "%s.blastnFiles.fofn" % (configDict["PREFIX"])
@@ -319,6 +318,9 @@ def real_main():
         #####
         fh.close()
         logFileHandle.write("End Time: %s\n" % time.process_time())
+
+        nextStage = 'end'
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
