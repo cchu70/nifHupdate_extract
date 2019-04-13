@@ -242,15 +242,14 @@ class BlastAlignmentData:
 
 #========================
 def deduplicate(fastaFile):
-    try:
-        cluster, source, x = fastaFile.split(".")
-        outputFile = "%s.%s.dup.fasta" % (cluster, source)
-        cdHitDupCmd = "cd-hit-dup -i %s -o %s" % (fastaFile, outputFile)
-        print(cdHitDupCmd)
-        n = subprocess.Popen(cdHitDupCmd, shell=True)
-        n.poll()
-    except:
-        pass
+
+    cluster, source, x = fastaFile.split(".", 2)
+    outputFile = "%s.%s.dup.fasta" % (cluster, source)
+    cdHitDupCmd = "cd-hit-dup -i %s -o %s" % (fastaFile, outputFile)
+    print(cdHitDupCmd)
+    n = subprocess.Popen(cdHitDupCmd, shell=True)
+    n.poll()
+
 #========================
 def throwError(errorMessage, fh):
     fh.write("\n-----------------\n")
