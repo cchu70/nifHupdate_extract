@@ -335,9 +335,13 @@ def real_main():
 
         clusterFileHandles = {}
 
+
         fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
         for fastaTrimmedFileName in open(fastaTrimmedFofn, "r"):
             prefix, source, end = fastaTrimmedFileName.split(".", 2)
+
+            altClusterName = "other.%s.fasta" % source
+
             for record in SeqIO.parse(fastaTrimmedFileName.strip(), "fasta"):
                 cluster = record.id.split(";")[1]
                 fileName = cluster + ".%s.fasta" % source
@@ -346,15 +350,24 @@ def real_main():
                 except:
                     print(fileName)
                     try:
+                        # new file
                         fh = open(fileName, "a")
+                        ch.write("%s\n" % fileName)
+                        clusterFileHandles[fileName] = fh
                         # wont work if the cluster name is weirdly formatted
                     except:
                         # rename
-                        fileName = "other.%s.fasta" % source
-                        fh = open(fileName, "a")
+                        try:
+                            fileName = altClusterName
+                            fh = clusterFileHandles[altClusterName]
+                        except:
+                            # new file
+                            fh = open(fileName, "a")
+                            ch.write("%s\n" % fileName)
+                            clusterFileHandles[fileName] = fh
                     #####
-                    ch.write("%s\n" % fileName)
-                    clusterFileHandles[fileName] = fh
+
+
                 #####
 
                 SeqIO.write(record, clusterFileHandles[fileName], "fasta")
