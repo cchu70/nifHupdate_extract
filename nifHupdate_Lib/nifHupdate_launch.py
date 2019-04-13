@@ -176,7 +176,7 @@ def real_main():
         fh.close()
 
         # testing the time it takes to run
-        logFileHandle.write("End Time: %s\n" % time.process_time())
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
 
         # clean tmp files
@@ -207,7 +207,7 @@ def real_main():
             makeDbCmd = "makeblastdb -in %s/%s -parse_seqids -dbtype nucl -out %s/%s/%s" % (basePath, configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
             CMDLIST.append(makeDbCmd)
         #####
-        logFileHandle.write("End Time: %s\n" % time.process_time())
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
         nextStage = 'blastn'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s" % (basePath, configFile, nextStage, basePath, logFile)
@@ -246,7 +246,7 @@ def real_main():
 
             fh.close()
         #####
-        logFileHandle.write("End Time: %s\n" % time.process_time())
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
         nextStage = 'filter_best_alignments'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
@@ -276,7 +276,7 @@ def real_main():
 
         #####
 
-        logFileHandle.write("End Time: %s\n" % time.process_time())
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
         nextStage = 'trim_seq'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
@@ -318,7 +318,7 @@ def real_main():
 
         #####
         fh.close()
-        logFileHandle.write("End Time: %s\n" % time.process_time())
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
         nextStage = 'cluster'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
@@ -377,7 +377,7 @@ def real_main():
         for clusterFileHandle in clusterFileHandles:
             clusterFileHandles[clusterFileHandle].close()
 
-        logFileHandle.write("End Time: %s\n" % time.process_time())
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
         nextStage = 'deduplicate'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
@@ -391,13 +391,27 @@ def real_main():
     # cd-hit-dup -i fasta -o output
         clusterFastaFofn = "%s.cluster_fasta.fofn" % PREFIX
 
+        dedupFastaFofn = "%s.cluster_fasta_dedup.fofn" % PREFIX
+        fh = open(dedupFastaFofn, "w")
         for fastaFile in open(clusterFastaFofn, "r"):
             deduplicate(fastaFile.strip())
+            fh.write(fastaFile)
         #####
-        logFileHandle.write("End Time: %s\n" % time.process_time())
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
-    # Reading stderr
 
+
+        rmCmd = 'rm -r'
+        nextStage = 'end'
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
+
+        CMDLIST.append(nextCmd)
+        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
+        launch(shFileName)
+
+    elif (stage == 'end'):
+        print("Finished!")
+        # print stats
 
     return 0
 #==============================================================
