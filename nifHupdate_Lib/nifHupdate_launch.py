@@ -331,7 +331,7 @@ def real_main():
     elif (stage == 'cluster'):
 
         clusterFilesFofn = "%s.cluster_fasta.fofn" % PREFIX
-        ch = open(clusterFilesFofn, "r")
+        ch = open(clusterFilesFofn, "w")
 
         clusterFileHandles = {}
 
@@ -372,7 +372,7 @@ def real_main():
 # ================= STAGE 8 ===================== #
     elif (stage == 'deduplicate'):
     # cd-hit-dup -i fasta -o output
-        clusterFastaFofn = "cluster_fasta.fofn"
+        clusterFastaFofn = "%s.cluster_fasta.fofn" % PREFIX
 
         for fastaFile in open(clusterFastaFofn, "r"):
             deduplicate(fastaFile.strip())
