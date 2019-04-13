@@ -340,8 +340,9 @@ def real_main():
             prefix, source, end = fastaTrimmedFileName.split(".", 2)
             for record in SeqIO.parse(fastaTrimmedFileName.strip(), "fasta"):
                 cluster = record.id.split(";")[1]
+                fileName = cluster + ".%s.fasta" % source
                 try:
-                    fh = clusterFileHandles[cluster]
+                    fh = clusterFileHandles[fileName]
                 except:
                     fileName = cluster + ".%s.fasta" % source
                     try:
@@ -353,12 +354,15 @@ def real_main():
                         fh = open(fileName, "a")
                     #####
                     ch.write("%s\n" % fileName)
-                    clusterFileHandles[cluster] = fh
+                    clusterFileHandles[fileName] = fh
                 #####
 
                 SeqIO.write(record, clusterFileHandles[cluster], "fasta")
             #####
         #####
+
+        for clusterFileHandle in clusterFileHandles:
+            clusterFileHandles[clusterFileHandle].close()
 
         logFileHandle.write("End Time: %s\n" % time.process_time())
 
