@@ -357,7 +357,7 @@ def real_main():
                     clusterFileHandles[fileName] = fh
                 #####
 
-                SeqIO.write(record, clusterFileHandles[cluster], "fasta")
+                SeqIO.write(record, clusterFileHandles[fileName], "fasta")
             #####
         #####
 
