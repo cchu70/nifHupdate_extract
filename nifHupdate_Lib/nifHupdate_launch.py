@@ -3,7 +3,7 @@ __author__="Claudia Chu"
 __date__ ="2/24/19"
 
 from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, \
- throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast
+ throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate
 
 from os.path import abspath, join, isfile
 
