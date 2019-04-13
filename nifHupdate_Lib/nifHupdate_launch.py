@@ -237,7 +237,8 @@ def real_main():
             fh = open(fofnFileName, "w")
 
             for fastaFile in open(fastaFofn, "r"):
-                prefix, source, end = fastaFile.strip().split(".")
+                print(fastaFile)
+                prefix, source, end = fastaFile.strip().split(".", 2)
                 outputFile = "%s.%s.blastn.txt" % (prefix, source)
                 fh.write(outputFile + "\n") # write to blast fofn file
                 CMDLIST.append("echo Blasting %s ..." % fastaFile.strip())
@@ -312,14 +313,14 @@ def real_main():
             prefix, source, end = fastaFile.strip().split(".")
 
             trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
-            fh.write(trimFastaFileName)
+            fh.write("%s\n" % trimFastaFileName)
             trimSeq(fastaFile, trimFastaFileName, blastnMap)
 
         #####
         fh.close()
         logFileHandle.write("End Time: %s\n" % time.process_time())
 
-        nextStage = 'end'
+        nextStage = 'cluster'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
         CMDLIST.append(nextCmd)
@@ -351,7 +352,7 @@ def real_main():
                         fileName = "other.%s.fasta" % source
                         fh = open(fileName, "a")
                     #####
-                    ch.write(fileName)
+                    ch.write("%s\n" % fileName)
                     clusterFileHandles[cluster] = fh
                 #####
 
