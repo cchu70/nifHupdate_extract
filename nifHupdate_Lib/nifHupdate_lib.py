@@ -28,7 +28,7 @@ def_evalue = 0.001
 # #========================
 # Allowed sets
 DATETYPES = set(["PDAT"])
-stages = set(['esearch', 'fasta', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster'])
+stages = set(['esearch', 'fasta', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
 MAX_REUQUESTS = 3 # for entrex direct
 
 
