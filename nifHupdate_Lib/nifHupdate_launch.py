@@ -344,7 +344,7 @@ def real_main():
                 try:
                     fh = clusterFileHandles[fileName]
                 except:
-                    fileName = cluster + ".%s.fasta" % source
+                    print(fileName)
                     try:
                         fh = open(fileName, "a")
                         # wont work if the cluster name is weirdly formatted
