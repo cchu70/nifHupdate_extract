@@ -29,7 +29,7 @@ def_evalue = 0.001
 # Allowed sets
 DATETYPES = set(["PDAT"])
 stages = set(['esearch', 'fasta', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
-MAX_REUQUESTS = 3 # for entrex direct
+MAX_REQUESTS = 3 # for entrex direct
 
 
 #========================
@@ -89,42 +89,40 @@ def fasta(esearchFile, sortterm, outputFasta):
             tmpName = "tmp.%s" % outputFasta
             tmpFileHandle = open(tmpName, "w")
             recId, acc, taxId, slen, date, organism, title = line.strip().split("\t")
-            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta""" % (acc)
+            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta | awk 'BEGIN {RS=">"}/%s/{print ">"$0}""" % (acc, sortterm)
 
-            n = subprocess.Popen(fastaCmd, shell=True, stdin = subprocess.PIPE, stdout = tmpFileHandle)
-            wait(n)
-            n.kill()
 
-            requestCont += 1 # increment count
+            requestFinished = False
+            while (not requestFinished):
+                try:
+                    n = subprocess.Popen(fastaCmd, shell=True, stdin = subprocess.PIPE, stdout = tmpFileHandle)
+                    wait(n)
+                    n.kill()
 
-            if (requestCont == MAX_REUQUESTS ):
-                time.sleep(1)
-                requestCont = 0
+                    requestFinished = True
+
+                    requestCont += 1 # increment count
+
+                    if (requestCont == MAX_REQUESTS ):
+                        time.sleep(1)
+                        requestCont = 0
+                    #####
+
+
+                except:
+                    requestFinished = False
+                    time.sleep(300) # Sleep for 5 minutes
+                    # Then Try again
+                #####
             #####
 
             i = 1
-            # if (sortterm == "genome"):
-            #     for record in SeqIO.parse(tmpName, "fasta"):
-            #         if ("nifH" in record.description):
-            #             record.description = "[Acc: %s] [Ver: %d] [Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (record.id, i, date, organism, title, taxId)
-            #             record.id = acc
-            #             SeqIO.write(record, fastaFileHandle, "fasta")
-            #             i += 1
-            #     #####
-            # else:
-            #     for record in SeqIO.parse(tmpName, "fasta"):
-            #         record.description = "[Acc: %s] [Ver: %d] [Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (record.id, i, date, organism, title, taxId)
-            #         record.id = acc
-            #         SeqIO.write(record, fastaFileHandle, "fasta")
-            #         i += 1
-            #     #####
 
             for record in SeqIO.parse(tmpName, "fasta"):
                 if ("nifH" in record.description):
                     record.description = "[Acc: %s] [Ver: %d] [Date: %s] [Organism: %s] [Title: %s] [TaxID: %s]" % (record.id, i, date, organism, title, taxId)
                     record.id = acc
                     SeqIO.write(record, fastaFileHandle, "fasta")
-                    print(record.id)
                     i += 1
             #####
         #####
