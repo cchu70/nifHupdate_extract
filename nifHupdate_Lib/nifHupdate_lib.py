@@ -89,7 +89,7 @@ def fasta(esearchFile, sortterm, outputFasta):
             tmpName = "tmp.%s" % outputFasta
             tmpFileHandle = open(tmpName, "w")
             recId, acc, taxId, slen, date, organism, title = line.strip().split("\t")
-            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta | awk 'BEGIN {RS=">"}/%s/{print ">"$0}""" % (acc, sortterm)
+            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta | awk 'BEGIN {RS=">"}/%s/{print ">"$0}'""" % (acc, sortterm)
 
 
             requestFinished = False
@@ -111,6 +111,7 @@ def fasta(esearchFile, sortterm, outputFasta):
 
                 except:
                     requestFinished = False
+                    print("Busy...\n")
                     time.sleep(300) # Sleep for 5 minutes
                     # Then Try again
                 #####
