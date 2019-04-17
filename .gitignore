@@ -4,3 +4,4 @@ venv
 TAXA*
 *.sh
 *.pyc
+*log*

@@ -109,6 +109,7 @@ def real_main():
             fh.write(outputfile)
 
         fh.close()
+
         # Next stage
         nextStage = 'fasta'
         echoCmd = "echo Launching next stage %s" % nextStage
@@ -132,6 +133,7 @@ def real_main():
         # # TESTING
         # test("In fasta!")
         # ######
+
 
         fastaFofn = "%s.fasta.fofn" % PREFIX
         fh = open(fastaFofn, "w")
