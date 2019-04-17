@@ -91,6 +91,7 @@ def fasta(esearchFile, sortterm, outputFasta):
             recId, acc, taxId, slen, date, organism, title = line.strip().split("\t")
             fastaCmd = """efetch -db nuccore -id %s -format gene_fasta | awk 'BEGIN {RS=">"}/%s/{print ">"$0}' """ % (acc, sortterm)
             print(fastaCmd)
+            assert False
 
 
             requestFinished = False
