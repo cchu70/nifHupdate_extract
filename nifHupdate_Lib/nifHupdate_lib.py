@@ -89,7 +89,7 @@ def fasta(esearchFile, sortterm, outputFasta):
             tmpName = "tmp.%s" % outputFasta
             tmpFileHandle = open(tmpName, "w")
             recId, acc, taxId, slen, date, organism, title = line.strip().split("\t")
-            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta | awk 'BEGIN {RS=">"}/%s/{print ">"$0}' """ % (acc, sortterm)
+            fastaCmd = """efetch -db nuccore -id %s -format gene_fasta """ % (acc)
 
 
             requestFinished = False
@@ -101,6 +101,7 @@ def fasta(esearchFile, sortterm, outputFasta):
                     n.kill()
 
                     requestFinished = True
+                    print("Done!")
 
                     requestCont += 1 # increment count
 
@@ -118,8 +119,6 @@ def fasta(esearchFile, sortterm, outputFasta):
                     # Then Try again
                 #####
             #####
-
-
             i = 1
 
             for record in SeqIO.parse(tmpName, "fasta"):
