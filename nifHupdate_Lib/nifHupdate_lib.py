@@ -97,6 +97,7 @@ def fasta(esearchFile, sortterm, outputFasta):
                 try:
                     print("Retrieving %s" % acc)
                     n = subprocess.Popen(fastaCmd, shell=True, stdin = subprocess.PIPE, stdout = tmpFileHandle)
+                    time.sleep(1)
                     wait(n)
                     n.kill()
 
@@ -106,7 +107,7 @@ def fasta(esearchFile, sortterm, outputFasta):
                     requestCont += 1 # increment count
 
                     if (requestCont == MAX_REQUESTS ):
-                        time.sleep(1)
+                        time.sleep(10)
                         requestCont = 0
                     #####
 
