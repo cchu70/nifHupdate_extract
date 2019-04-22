@@ -157,8 +157,6 @@ def real_main():
                     fastaFileName = "%s.%s.fasta" % (prefix, sortterm)
                     fh.write("%s\n" % fastaFileName) # record fasta file names
 
-                    print("Retrieving %s" % fastaFileName)
-
                     # # # OLD
                     # if sortterm == "nifH":
                     CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
