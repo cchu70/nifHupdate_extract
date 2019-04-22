@@ -161,12 +161,12 @@ def real_main():
 
                     # # # OLD
                     # if sortterm == "nifH":
-                    #     CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
-                    #     CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
-                    #     print("getting %s" % esearchFile)
+                    CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
+                    CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
+                    print("getting %s" % esearchFile)
                     # else:
                     #     # just one accession at a time
-                    fasta(esearchFile.strip(), sortterm, fastaFileName)
+                    # fasta(esearchFile.strip(), sortterm, fastaFileName)
                     # t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
                     # threads.append(t)
                     # t.start()
