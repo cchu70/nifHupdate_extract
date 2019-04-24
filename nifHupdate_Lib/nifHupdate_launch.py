@@ -3,7 +3,7 @@ __author__="Claudia Chu"
 __date__ ="2/24/19"
 
 from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, \
- throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate
+ throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate, minimapCmds, mapEsearch, reHead
 
 from os.path import abspath, join, isfile
 
@@ -65,9 +65,11 @@ def real_main():
     # Read the config file
     configDict = parseConfig(configFile, basePath, logFileHandle)
 
-    # Get numerical year
-    startDate = parseDate(configDict["START"])
-    endDate = parseDate(configDict["END"])
+    if (configDict["PATH"] == 'edirect'):
+        # Get numerical year
+        startDate = parseDate(configDict["START"])
+        endDate = parseDate(configDict["END"])
+    #####
 
     # FREQUENTLY USED CONSTANTS AND VARIABLES
     CMDLIST = []
@@ -157,18 +159,10 @@ def real_main():
                     fastaFileName = "%s.%s.fasta" % (prefix, sortterm)
                     fh.write("%s\n" % fastaFileName) # record fasta file names
 
-                    # # # OLD
-                    # if sortterm == "nifH":
                     CMDLIST.append("echo Retrieving %s ..." % fastaFileName)
                     CMDLIST.append(fastaCmds(esearchFile.strip(), sortterm, basePath, fastaFileName))
                     print("getting %s" % esearchFile)
-                    # else:
-                    #     # just one accession at a time
-                    # fasta(esearchFile.strip(), sortterm, fastaFileName)
-                    # t = threading.Thread(target=fasta, args= (esearchFile.strip(), sortterm, fastaFileName))
-                    # threads.append(t)
-                    # t.start()
-                    # t.join()
+
                 #####
             #####
         #####
@@ -182,9 +176,42 @@ def real_main():
         # clean tmp files
         rmCmd = "rm tmp*"
         # Next stage
-        nextStage = 'set_db'
+        nextStage = 'fasta_rehead'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
         CMDLIST.append(rmCmd)
+        CMDLIST.append(nextCmd)
+        shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
+
+        # # TESTING
+        # testPrintFile(shFileName)
+        # ######
+        launch(shFileName)
+
+# ================ STAGE 2.1 ==================== #
+    elif(stage == 'fasta_rehead'):
+
+        esearchFofn = "%s/%s/%s.esearch.fofn" % (basePath, PREFIX, PREFIX)
+        esearchMap = mapEsearch(esearchFofn)
+        fastaFofn = "%s.fasta.fofn" % PREFIX
+
+        fastaReHeadFofn = "%s.fasta.rehead.fofn" % PREFIX
+        fh = open(fastaReHeadFofn, "w")
+        if (not isfile(fastaFofn)):
+            throwError("fasta stage failed: %s not found" % esearchFofn, logFileHandle)
+        else:
+            for fastaFile in open(fastaFofn, "r"):
+                prefix, source, end = fastaFile.strip().split(".", 2)
+                outputFastaFileName = "%s.%s.rehead.fasta" % (prefix, source)
+                fh.write("%s\n" % outputFastaFileName)
+                print(fastaFile)
+                reHead(fastaFile.strip(), esearchMap, outputFastaFileName)
+            #####
+        #####
+        fh.close()
+
+        # Next stage
+        nextStage = 'set_db'
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
 
@@ -228,15 +255,15 @@ def real_main():
         # test("In blastn!")
         # ######
 
-        fastaFofn = "%s.fasta.fofn" % PREFIX
-        if (not isfile(fastaFofn)):
+        fastaReHeadFofn = "%s.fasta.rehead.fofn" % PREFIX
+        if (not isfile(fastaReHeadFofn)):
             throwError("fasta stage failed: %s not found" % esearchFofn, logFileHandle)
         else:
 
             fofnFileName = "%s.blastnFiles.fofn" % (PREFIX)
             fh = open(fofnFileName, "w")
 
-            for fastaFile in open(fastaFofn, "r"):
+            for fastaFile in open(fastaReHeadFofn, "r"):
                 print(fastaFile)
                 prefix, source, end = fastaFile.strip().split(".", 2)
                 outputFile = "%s.%s.blastn.txt" % (prefix, source)
@@ -289,7 +316,7 @@ def real_main():
 
     elif (stage == 'trim_seq'):
 
-
+        print('In trim_seq')
 
         # parse the blastn files into a map
         blastnFofn = "%s.blastnFiles.fofn" % (configDict["PREFIX"])
@@ -308,13 +335,14 @@ def real_main():
         fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
         fh = open(fastaTrimmedFofn, "w")
 
-        fastaFofn = "%s.fasta.fofn" % PREFIX
-        for fastaFile in open(fastaFofn, "r"):
-            prefix, source, end = fastaFile.strip().split(".")
+        fastaReHeadFofn = "%s.fasta.rehead.fofn" % PREFIX
+        for fastaFile in open(fastaReHeadFofn, "r"):
+
+            prefix, source, end = fastaFile.strip().split(".", 2)
 
             trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
             fh.write("%s\n" % trimFastaFileName)
-            trimSeq(fastaFile, trimFastaFileName, blastnMap)
+            trimSeq(fastaFile.strip(), trimFastaFileName, blastnMap)
 
         #####
         fh.close()
@@ -373,6 +401,7 @@ def real_main():
                 SeqIO.write(record, clusterFileHandles[fileName], "fasta")
             #####
         #####
+        ch.close()
 
         for clusterFileHandle in clusterFileHandles:
             clusterFileHandles[clusterFileHandle].close()
@@ -389,11 +418,13 @@ def real_main():
 # ================= STAGE 8 ===================== #
     elif (stage == 'deduplicate'):
     # cd-hit-dup -i fasta -o output
+        print('In deduplication stage!')
         clusterFastaFofn = "%s.cluster_fasta.fofn" % PREFIX
 
         dedupFastaFofn = "%s.cluster_fasta_dedup.fofn" % PREFIX
         fh = open(dedupFastaFofn, "w")
         for fastaFile in open(clusterFastaFofn, "r"):
+            print(fastaFile)
             deduplicate(fastaFile.strip())
             fh.write(fastaFile)
         #####
@@ -401,17 +432,53 @@ def real_main():
 
 
 
-        rmCmd = 'rm -r'
+        rmCmd = 'rm -r *.clstr'
         nextStage = 'end'
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
+        CMDLIST.append(rmCmd)
+        CMDLIST.append(nextCmd)
+        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
+        launch(shFileName)
+# ================= STAGE 9 ===================== #
+    elif (stage == 'end'):
+        print("Finished!")
+        # print stats
+
+
+
+# ============= ALTERNATIVE APPROACH ============ #
+# ================= STAGE A ===================== #
+    elif (stage == 'minimap'):
+        print("in minimap")
+        oldSeqDB = "seqDatabase.fasta"
+        nuccoreDBFofn = "%s/%s" % (basePath, configDict["NUCCORE"]) # path to nuccore files
+        tmpFile = "tmp.fna"
+
+        miniMapFofn = "%s.minimap.fofn" % PREFIX
+        fh = open(miniMapFofn, "w")
+
+        for nuccoreFile in open(nuccoreDBFofn, "r"):
+            outputFileName = "%s.%s.minimap.paf" % (nuccoreFile.split("/")[-1].split(".")[0], oldSeqDB.split(".")[0])
+            fh.write("%s \n" % outputFileName)
+            CMDLIST.append("echo minimapping %s to %s" % (configDict["NUCCORE"], oldSeqDB))
+            CMDLIST.append("zcat < %s > %s" % (nuccoreFile.strip(), tmpFile))
+            CMDLIST.append(minimapCmds(tmpFile, oldSeqDB, outputFileName))
+
+        fh.close()
+
+        CMDLIST.append("rm tmp.fna")
+        nextStage = 'approx_seq'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
+        # testPrintFile(shFileName)
         launch(shFileName)
 
-    elif (stage == 'end'):
-        print("Finished!")
-        # print stats
+# ================= STAGE B ===================== #
+    elif (stage == 'approx_seq'):
+        print('approx_seq')
+
 
     return 0
 #==============================================================

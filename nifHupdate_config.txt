@@ -1,9 +1,11 @@
-PREFIX  TAXA
-QUERY   nifH [GENE] NOT UNVERIFIED
+PATH    [edirect][minimap]
+PREFIX  TAXA [filename header]
+QUERY   nifH [GENE] NOT UNVERIFIED [only for edirect]
 DBFILE    seqDatabase.fasta
-DBNAME     TAXA_DB
-START   2017
-END     2018
-DATETYPE    PDAT
-DATERANGE   true
-SORTTERMS   genome nifH
+DBNAME     TAXA_DB [only for edirect]
+START   2017 [only for edirect]
+END     2018 [only for edirect]
+DATETYPE    PDAT [only for edirect]
+DATERANGE   true [only for edirect]
+SORTTERMS   genome nifH [only for edirect]
+NUCCORE     path/to/fofn/full/paths/to/nuccore/files
