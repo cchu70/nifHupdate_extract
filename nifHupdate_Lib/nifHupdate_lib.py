@@ -4,6 +4,7 @@ __date__ ="2/18/19"
 
 
 from os.path import abspath, join, isfile
+import os
 from Bio import SeqIO
 import subprocess
 import time
@@ -28,7 +29,8 @@ def_evalue = 0.001
 # #========================
 # Allowed sets
 DATETYPES = set(["PDAT"])
-stages = set(['esearch', 'fasta', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
+edirect_stages = set(['esearch', 'fasta', 'fasta_rehead','set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
+minimap_stages = set(['minimap', 'approx_seq', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
 MAX_REQUESTS = 3 # for entrex direct
 
 
@@ -70,11 +72,15 @@ def esearchCmds(configDict, year, outputFile):
     return edirectCmd
 
 #========================
+def minimapCmds(refSeqFileName, querySeqFileName, outputFileName):
+    cmd = "minimap2 %s %s > %s" % (refSeqFileName, querySeqFileName, outputFileName)
+    return cmd
+
+#========================
 def fastaCmds(esearchFile, grepFilter, basePath, fastaFileName):
 
     cat = "cat %s" % (esearchFile)
     acc = """awk 'BEGIN { ORS="," }; { print $2 }'"""
-
 
     fastaCmd = "%s | grep '%s' | %s | python3 %s/nifHupdate_Lib/nifHupdate_fasta.py > %s\n" % (cat, grepFilter, acc, basePath, fastaFileName)
 
@@ -181,7 +187,6 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
     # i = 0
     outputFileHandle = open(outputFileName, "w")
     for record in SeqIO.parse(fastaFileName.strip(), "fasta"):
-
         if record.id in blastItems:
 
             blastnData = blastItems[record.id]
@@ -190,20 +195,25 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
             length = int(blastnData.length)
             qlen = int(blastnData.qlen)
             distance = qlen - length
+
             if (distance >= 340 and distance <= (0.5 * length)):
                 record.seq = record.seq[int(qstart):int(qend)]
             #####
 
             cluster = blastnData.sseqid.split(';')[1]
 
-            infoDict = {}
-            for part in record.description.split("] ["):
-                label, info = part.split(":", 1)
-                infoDict[label] = info
-            #####
+            # infoDict = {}
+            # for part in record.description.split("] ["):
+            #     label, info = part.split(":", 1)
+            #     infoDict[label] = info
+            # #####
 
-            header = "%s;%s;%s" % (record.id, cluster, infoDict["Organism"].strip())
+            organism = record.description;
+
+            header = "%s;%s;%s" % (record.id, cluster, organism)
+            print(header)
             record.id = header
+            record.description = ""
             SeqIO.write(record, outputFileHandle, "fasta")
 
 #========================
@@ -217,6 +227,41 @@ def mapBlast(blastnFofn):
         #####
     #####
     return blastnMap
+
+#========================
+def mapEsearch(esearchFofn):
+    # "Id Caption TaxId Slen CreateDate Organism Title"
+    esearchMap = {}
+    for file in open(esearchFofn, "r"):
+        for line in open(file.strip(), "r"):
+            iD, caption, taxId, slen, createDate, organism, title = line.split('\t')
+            esearchMap[caption] = organism
+        #####
+    #####
+    return esearchMap
+
+#========================
+def reHead(fastaFileName, esearchMap, outputFile):
+    fh = open(outputFile, "w")
+
+    currAcc = ""
+    for record in SeqIO.parse(fastaFileName, "fasta"):
+        acc = record.id.split(".")[0].split('|')[1]
+
+        try:
+            # MAJOR ASSUMPTION THAT THE FIRST ONE WILL ACTUALLY WORK
+            organism = esearchMap[acc]
+            currAcc = acc
+            record.id = acc
+            record.description = organism
+        except:
+            organism = esearchMap[currAcc]
+            record.id = currAcc;
+            record.description = organism
+        #####
+        SeqIO.write(record, fh, "fasta")
+    #####
+    fh.close()
 
 # ====================================================================
 custom_fields = ['qseqid', 'sseqid', 'pident', 'length', 'qlen', 'mismatch', 'gapopen', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bitscore', 'sstrand', 'qcovhsp']
@@ -276,88 +321,118 @@ def parseConfig(configFile, basePath, logFileFh):
 
 
     # check config errors and put in defaults
-
-
     # -----------------------------
     # Test prefix
     try:
         prefix = configDict["PREFIX"]
     except:
         throwError("No PREFIX provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+    #####
+
     # -----------------------------
-    # Test QUERY
+    # Test specifying what part of the pipeline to use
     try:
-        queries = configDict["QUERY"]
-    except KeyError:
-        throwError("No QUERY provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+        path = configDict["PATH"]
     except:
-        throwError("Improper formatting of query terms in the configuration file %s. , logFileFh\
-            Please delimit with semicolons ';'", configFile.split("/")[-1])
-    # -----------------------------
-    # Test DATERANGE, START, END, and DATETYPE
-    try:
-        useDateRange = configDict["DATERANGE"]
-        if (useDateRange.lower() == 'true'):
+        throwError("No PATH provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+
+    if (path == 'edirect'):
+        try:
+            queries = configDict["QUERY"]
+        except KeyError:
+            throwError("No QUERY provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+        except:
+            throwError("Improper formatting of query terms in the configuration file %s. , logFileFh\
+                Please delimit with semicolons ';'", configFile.split("/")[-1])
+        # -----------------------------
+        # Test DATERANGE, START, END, and DATETYPE
+        try:
+            useDateRange = configDict["DATERANGE"]
+            if (useDateRange.lower() == 'true'):
+                try:
+                    start = configDict["START"]
+                    end   = configDict["END"]
+                    if (parseDate(start) > parseDate(end)):
+                        throwError("Invalid START and END date in Config File %s. , logFileFh\
+                            Check that start date is before end date." % configFile.split("/")[-1])
+                except KeyError:
+                    throwError("Unable to query in date range without specified start and end time. Please provide START and END tags (MM/DD/YYY, MM/YYYY, or YYYY) in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+                #####
+
+                try:
+                    datetype = configDict["DATETYPE"]
+                except KeyError:
+                    throwError("Unable to query data in date range without specified datetype. Options are %s" % ",".join(DATETYPES), logFileFh)
+                #####
+
+                # Everything there
+                configDict["DATERANGE"] = True
+            else:
+                throwError("%s is not a valid value. Only valid value for DATERANGE is 'true'. Otherwise, do not include the DATERANGE tag.", useDateRange, logFileFh)
+            #####
+        except KeyError:
+            # check if other tags were used
             try:
                 start = configDict["START"]
+                throwError("Provided START tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
+            except:
+                pass
+            #####
+
+            try:
                 end   = configDict["END"]
-                if (parseDate(start) > parseDate(end)):
-                    throwError("Invalid START and END date in Config File %s. , logFileFh\
-                        Check that start date is before end date." % configFile.split("/")[-1])
-            except KeyError:
-                throwError("Unable to query in date range without specified start and end time. Please provide START and END tags (MM/DD/YYY, MM/YYYY, or YYYY) in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+                throwError("Provided END tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
+            except:
+                pass
             #####
 
             try:
                 datetype = configDict["DATETYPE"]
-            except KeyError:
-                throwError("Unable to query data in date range without specified datetype. Options are %s" % ",".join(DATETYPES), logFileFh)
+                throwError("Provided DATETYPE tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
+            except:
+                pass
             #####
 
-            # Everything there
-            configDict["DATERANGE"] = True
-        else:
-            throwError("%s is not a valid value. Only valid value for DATERANGE is 'true'. Otherwise, do not include the DATERANGE tag.", useDateRange, logFileFh)
-        #####
-    except KeyError:
-        # check if other tags were used
+            # Default to not use date range
+            configDict["DATERANGE"] = False
+        # -----------------------------
         try:
-            start = configDict["START"]
-            throwError("Provided START tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
+            dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
+            if (not isfile(dbFile)):
+                throwError("Could not find database fasta file %s" % dbFile, logFileFh)
+        except KeyError:
+            throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
+        # -----------------------------
+        try:
+            x = configDict["SORTTERMS"]
+            configDict["SORTTERMS"] = x.split(None) # store the space delmited sort terms into a list
         except:
-            pass
+            # place default
+            configDict["SORTTERMS"] = def_sorttype
         #####
 
+    elif (path == 'minimap'):
+        # -----------------------------
         try:
-            end   = configDict["END"]
-            throwError("Provided END tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
-        except:
-            pass
+            dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
+            if (not isfile(dbFile)):
+                throwError("Could not find database fasta file %s" % dbFile, logFileFh)
+        except KeyError:
+            throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
         #####
 
+        # -----------------------------
         try:
-            datetype = configDict["DATETYPE"]
-            throwError("Provided DATETYPE tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
-        except:
-            pass
+            nuccore = "%s/%s" % (basePath, configDict["NUCCORE"])
+            if (not isfile(dbFile)):
+                throwError("Could not find database fasta file %s" % dbFile, logFileFh)
+            # if (os.stat(nuccore).st_size == 0):
+            #     throwError("%s is empty.")
+        except KeyError:
+            throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
         #####
-
-        # Default to not use date range
-        configDict["DATERANGE"] = False
-    # -----------------------------
-    try:
-        dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
-        if (not isfile(dbFile)):
-            throwError("Could not find database fasta file %s" % dbFile, logFileFh)
-    except KeyError:
-        throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
-    # -----------------------------
-    try:
-        x = configDict["SORTTERMS"]
-        configDict["SORTTERMS"] = x.split(None) # store the space delmited sort terms into a list
-    except:
-        # place default
-        configDict["SORTTERMS"] = def_sorttype
+    else:
+        throwError("%s is not a valid PATH. Choose either edirect or minimap" % path)
     #####
     return configDict
 

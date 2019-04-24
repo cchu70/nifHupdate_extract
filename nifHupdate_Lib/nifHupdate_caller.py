@@ -2,7 +2,7 @@
 __author__="Claudia Chu"
 __date__ ="2/18/19"
 
-from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, stages, throwError, testPrintFile
+from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, edirect_stages, minimap_stages, throwError, testPrintFile
 
 from os.path import abspath, join, isfile, isdir
 
@@ -28,7 +28,8 @@ def real_main():
 
     parser = OptionParser(usage)
 
-    restartJob_def = 'esearch'
+    # restartJob_def = 'esearch'
+    restartJob_def = 'minimap'
     parser.add_option( "-s", \
                        "--restartJob", \
                        type    = 'str', \
@@ -49,12 +50,8 @@ def real_main():
 
     nextStep = options.restartJob
 
-    # Check if stage is valid
-    if nextStep not in stages:
-        print("'%s' is not a valid stage." % nextStep)
-        assert False
-    #####
 
+    # Check arguments
     try:
         configFileName = argv[1]
     except:
@@ -70,17 +67,29 @@ def real_main():
         assert False
     #####
 
-    logFileFh = open(logFile, "a")
-
-    # Setting the config file name
+     # Setting the config file name
     configFile = "%s/%s" % (basePath, configFileName)
+    logFileFh = open(logFile, "a")
+    configDict = parseConfig(configFile, basePath, logFileFh)
+
+    if (configDict["PATH"] == 'minimap'):
+         # Check if stage is valid
+        if nextStep not in minimap_stages:
+            print("'%s' is not a valid stage." % nextStep)
+            assert False
+        #####
+
+    elif (configDict["PATH"] == 'edirect'):
+        # Check if stage is valid
+        if nextStep not in edirect_stages:
+            print("'%s' is not a valid stage." % nextStep)
+            assert False
+        #####
 
 
 
     # Command list
     cmdList = []
-
-    configDict = parseConfig(configFile, basePath, logFileFh)
 
     # Check if directory already exists. Prevent accidental overriding
     confirmDir = True
@@ -107,9 +116,12 @@ def real_main():
     # Continue adding commands
     cdFolder  = "cd %s" % (configDict["PREFIX"])
     launchCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s/%s" % (basePath, configFile, nextStep, basePath, basePath, logFile)
+    cdOut = "cd .." # go back out
+    cleanUpCmd = "mv %s_* ./%s" % (configDict["PREFIX"], configDict["PREFIX"]) # Move stuff into directory
 
     cmdList.append(cdFolder)
     cmdList.append(launchCmd)
+    cmdList.append(cleanUpCmd)
 
     shFileName = createShFile(cmdList, basePath, configDict['PREFIX'], 'launch')
     # Stop if shFileName fails

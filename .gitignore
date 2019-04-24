@@ -5,3 +5,9 @@ TAXA*
 *.sh
 *.pyc
 *log*
+*.gz
+A*
+genome_assemblies*
+Klebsiella_variicola*
+proteobacteria_refSeq*
+*.paf
