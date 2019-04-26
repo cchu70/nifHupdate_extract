@@ -3,7 +3,8 @@ __author__="Claudia Chu"
 __date__ ="2/24/19"
 
 from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, \
- throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate, minimapCmds, mapEsearch, reHead
+ throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate, minimapCmds, mapEsearch, reHead, \
+ def_minimap_align_len_cutoff
 
 from os.path import abspath, join, isfile
 
@@ -50,8 +51,6 @@ def real_main():
     #         startDate = configDict["START"]
     #     if (year == endDate):
     #         startDate = configDict["END"]
-
-
 
 
     # tracking time
@@ -231,7 +230,7 @@ def real_main():
         # check database already exists
         if (not verifyDb(configDict["DBFILE"])):
             # move to next stage
-            makeDbCmd = "makeblastdb -in %s/%s -parse_seqids -dbtype nucl -out %s/%s/%s" % (basePath, configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
+            makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
             CMDLIST.append(makeDbCmd)
         #####
         logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
@@ -450,35 +449,71 @@ def real_main():
 # ================= STAGE A ===================== #
     elif (stage == 'minimap'):
         print("in minimap")
-        oldSeqDB = "seqDatabase.fasta"
+        oldSeqDB = configDict["DBFILE"] #full path
         nuccoreDBFofn = "%s/%s" % (basePath, configDict["NUCCORE"]) # path to nuccore files
-        tmpFile = "tmp.fna"
 
         miniMapFofn = "%s.minimap.fofn" % PREFIX
         fh = open(miniMapFofn, "w")
 
         for nuccoreFile in open(nuccoreDBFofn, "r"):
-            outputFileName = "%s.%s.minimap.paf" % (nuccoreFile.split("/")[-1].split(".")[0], oldSeqDB.split(".")[0])
+            outputFileName = "%s.%s.minimap.paf" % (nuccoreFile.split("/")[-1].split(".")[0], oldSeqDB.split("/")[-1].split(".")[0])
             fh.write("%s \n" % outputFileName)
-            CMDLIST.append("echo minimapping %s to %s" % (configDict["NUCCORE"], oldSeqDB))
-            CMDLIST.append("zcat < %s > %s" % (nuccoreFile.strip(), tmpFile))
-            CMDLIST.append(minimapCmds(tmpFile, oldSeqDB, outputFileName))
+            CMDLIST.append("echo minimapping %s" % nuccoreFile.split("/")[-1].split(".")[0])
+            CMDLIST.append(minimapCmds(nuccoreFile.strip(), oldSeqDB, outputFileName))
 
         fh.close()
-
-        CMDLIST.append("rm tmp.fna")
-        nextStage = 'approx_seq'
+        nextStage = 'minimap_filter'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
         CMDLIST.append(nextCmd)
         shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
-        # testPrintFile(shFileName)
+
         launch(shFileName)
 
 # ================= STAGE B ===================== #
-    elif (stage == 'approx_seq'):
-        print('approx_seq')
+    elif (stage == 'minimap_filter'):
+        # test('In minimap_filter')
 
+        # Col 10: Mismatches
+        # Col 11: Alignment length
+
+        # if mismatches / alignment length < 25% -> throw out
+        # Collet the headers of the fasta files with +75% similarity
+        # Go back into the database to retrieve those sequences
+        # Then blast those sequences
+
+
+        # Filtered fasta file fofn
+        # fofnFileName = "%s.minimap_filter.fofn" % PREFIX
+        # fh = open(fofnFileName, "w")
+
+        pafFofnFile = "%s.minimap.fofn" % PREFIX
+
+        for pafFile in open(pafFofnFile, "r"):
+            # Parse fasta file (name conversion)
+            origFastaFileName = pafFile.strip()[:-3] # exclude the file ending
+            newFastaFileName = origFastaFileName + "filtered.fasta"
+            # ch = open(newFastaFileName, "w")
+            # new fasta file
+            for line in open(pafFile.strip(), "r"):
+                alignData = line.split("\t")
+
+                numMismatches = float(alignData[9]) # Col 10
+                alignLen = float(alignData[10]) # Col 11
+                print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
+                if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
+                    print("Take %s" % alignData[5])# Col 6
+
+
+                    # Test if the sequence length is long enough
+                    # header = alignData[5] # Col 6
+                    # find sequence with this header and add to new fasta
+                #####
+                # Low quality alignment
+            #####
+        #####
+
+        # fh.close()
 
     return 0
 #==============================================================

@@ -29,7 +29,8 @@ def fasta(accession):
 
 
     # extract_cmd = """efetch -db nuccore -id %s -format gene_fasta | awk 'BEGIN {RS=">"}/nifH/{print ">"$0}'""" % (accession)
-    extract_cmd = """efetch -db nuccore -id %s -format gene_fasta | awk '/nifH/{p++;print;next} /^>/{p=0} p'""" % (accession)
+    # extract_cmd = """efetch -db nuccore -id %s -format gene_fasta | awk '/nifH/{p++;print;next} /^>/{p=0} p'""" % (accession)
+    extract_cmd = """efetch -db nuccore -id %s -format gene_fasta""" % (accession)
     k = subprocess.Popen( extract_cmd, shell=True, stdin = subprocess.PIPE)
 
     wait(k)
