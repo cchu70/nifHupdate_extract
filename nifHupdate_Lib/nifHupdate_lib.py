@@ -398,7 +398,7 @@ def parseConfig(configFile, basePath, logFileFh):
             configDict["DATERANGE"] = False
         # -----------------------------
         try:
-            dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
+            dbFile = configDict["DBFILE"]
             if (not isfile(dbFile)):
                 throwError("Could not find database fasta file %s" % dbFile, logFileFh)
         except KeyError:
