@@ -354,8 +354,8 @@ def parseConfig(configFile, basePath, logFileFh):
                     start = configDict["START"]
                     end   = configDict["END"]
                     if (parseDate(start) > parseDate(end)):
-                        throwError("Invalid START and END date in Config File %s. , logFileFh\
-                            Check that start date is before end date." % configFile.split("/")[-1])
+                        throwError("Invalid START and END date in Config File %s. ," +
+                            "Check that start date is before end date." % configFile.split("/")[-1])
                 except KeyError:
                     throwError("Unable to query in date range without specified start and end time. Please provide START and END tags (MM/DD/YYY, MM/YYYY, or YYYY) in the configuration file %s" % configFile.split("/")[-1], logFileFh)
                 #####
