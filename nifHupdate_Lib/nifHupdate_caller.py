@@ -29,7 +29,7 @@ def real_main():
     parser = OptionParser(usage)
 
     # restartJob_def = 'esearch'
-    restartJob_def = 'minimap'
+    restartJob_def = 'esearch'
     parser.add_option( "-s", \
                        "--restartJob", \
                        type    = 'str', \
