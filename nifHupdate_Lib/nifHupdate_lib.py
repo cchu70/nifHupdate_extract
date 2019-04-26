@@ -25,12 +25,13 @@ def_sorttype = ["nifH", "genome"]
 def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp'
 def_dbfiles = ["nhr", "nsd", "nin", "nsi", "nsq"]
 def_evalue = 0.001
+def_minimap_align_len_cutoff = 200
 
 # #========================
 # Allowed sets
 DATETYPES = set(["PDAT"])
 edirect_stages = set(['esearch', 'fasta', 'fasta_rehead','set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
-minimap_stages = set(['minimap', 'approx_seq', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
+minimap_stages = set(['minimap', 'minimap_filter', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
 MAX_REQUESTS = 3 # for entrex direct
 
 
@@ -414,7 +415,8 @@ def parseConfig(configFile, basePath, logFileFh):
     elif (path == 'minimap'):
         # -----------------------------
         try:
-            dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
+            # dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
+            dbFile = configDict["DBFILE"]
             if (not isfile(dbFile)):
                 throwError("Could not find database fasta file %s" % dbFile, logFileFh)
         except KeyError:

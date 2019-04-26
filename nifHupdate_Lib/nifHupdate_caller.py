@@ -117,7 +117,7 @@ def real_main():
     cdFolder  = "cd %s" % (configDict["PREFIX"])
     launchCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s/%s" % (basePath, configFile, nextStep, basePath, basePath, logFile)
     cdOut = "cd .." # go back out
-    cleanUpCmd = "mv %s_* ./%s" % (configDict["PREFIX"], configDict["PREFIX"]) # Move stuff into directory
+    cleanUpCmd = "mv %s_*.sh ./%s" % (configDict["PREFIX"], configDict["PREFIX"]) # Move stuff into directory
 
     cmdList.append(cdFolder)
     cmdList.append(launchCmd)
