@@ -24,6 +24,7 @@ def_sorttype = ["nifH", "genome"]
 
 def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp'
 def_dbfiles = ["nhr", "nsd", "nin", "nsi", "nsq"]
+def_dbname = "DB"
 def_evalue = 0.001
 def_minimap_align_len_cutoff = 200
 
@@ -31,8 +32,9 @@ def_minimap_align_len_cutoff = 200
 # Allowed sets
 DATETYPES = set(["PDAT"])
 edirect_stages = set(['esearch', 'fasta', 'fasta_rehead','set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
-minimap_stages = set(['minimap', 'minimap_filter', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
+minimap_stages = set(['minimap', 'minimap_filter', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
 MAX_REQUESTS = 3 # for entrex direct
+
 
 
 #========================
@@ -203,12 +205,6 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
 
             cluster = blastnData.sseqid.split(';')[1]
 
-            # infoDict = {}
-            # for part in record.description.split("] ["):
-            #     label, info = part.split(":", 1)
-            #     infoDict[label] = info
-            # #####
-
             organism = record.description;
 
             header = "%s;%s;%s" % (record.id, cluster, organism)
@@ -263,6 +259,16 @@ def reHead(fastaFileName, esearchMap, outputFile):
         SeqIO.write(record, fh, "fasta")
     #####
     fh.close()
+
+#========================
+def whichFastaFofn(configDict):
+    fastaFofn = ""
+    if (configDict['PATH'] == 'edirect'):
+        fastaFofn = "%s.fasta.rehead.fofn" % PREFIX
+    elif (configDict['PATH'] == 'minimap'):
+        fastaFofn = "%s.minimap_filter.fofn" % PREFIX
+
+    return fastaFofn
 
 # ====================================================================
 custom_fields = ['qseqid', 'sseqid', 'pident', 'length', 'qlen', 'mismatch', 'gapopen', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bitscore', 'sstrand', 'qcovhsp']
@@ -330,6 +336,18 @@ def parseConfig(configFile, basePath, logFileFh):
         throwError("No PREFIX provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
     #####
 
+     # -----------------------------
+    try:
+        dbFile = configDict["DBFILE"]
+        if (not isfile(dbFile)):
+            throwError("Could not find database fasta file %s" % dbFile, logFileFh)
+    except KeyError:
+        throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
+    # -----------------------------
+    try:
+        x = configDict["DBNAME"]
+    except KeyError:
+        configDict["DBNAME"] = def_dbname
     # -----------------------------
     # Test specifying what part of the pipeline to use
     try:
@@ -396,13 +414,7 @@ def parseConfig(configFile, basePath, logFileFh):
 
             # Default to not use date range
             configDict["DATERANGE"] = False
-        # -----------------------------
-        try:
-            dbFile = configDict["DBFILE"]
-            if (not isfile(dbFile)):
-                throwError("Could not find database fasta file %s" % dbFile, logFileFh)
-        except KeyError:
-            throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
+
         # -----------------------------
         try:
             x = configDict["SORTTERMS"]
@@ -413,16 +425,6 @@ def parseConfig(configFile, basePath, logFileFh):
         #####
 
     elif (path == 'minimap'):
-        # -----------------------------
-        try:
-            # dbFile = "%s/%s" % (basePath, configDict["DBFILE"])
-            dbFile = configDict["DBFILE"]
-            if (not isfile(dbFile)):
-                throwError("Could not find database fasta file %s" % dbFile, logFileFh)
-        except KeyError:
-            throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
-        #####
-
         # -----------------------------
         try:
             nuccore = "%s/%s" % (basePath, configDict["NUCCORE"])

@@ -250,22 +250,21 @@ def real_main():
 # Aligning each of the query sequences to the subject sequences from local database.
 
     elif (stage == 'blastn'):
-        # # TESTING
-        # test("In blastn!")
-        # ######
+        fastaFofn = fastaFofn = whichFastaFofn(configDict)
 
-        fastaReHeadFofn = "%s.fasta.rehead.fofn" % PREFIX
-        if (not isfile(fastaReHeadFofn)):
+        if (not isfile(fastaFofn)):
             throwError("fasta stage failed: %s not found" % esearchFofn, logFileHandle)
         else:
+
+            CMDLIST.append("mkdir blastn")
 
             fofnFileName = "%s.blastnFiles.fofn" % (PREFIX)
             fh = open(fofnFileName, "w")
 
-            for fastaFile in open(fastaReHeadFofn, "r"):
-                print(fastaFile)
+            for fastaFile in open(fastaFofn, "r"):
+
                 prefix, source, end = fastaFile.strip().split(".", 2)
-                outputFile = "%s.%s.blastn.txt" % (prefix, source)
+                outputFile = "./blastn/%s.%s.blastn.txt" % (prefix, source)
                 fh.write(outputFile + "\n") # write to blast fofn file
                 CMDLIST.append("echo Blasting %s ..." % fastaFile.strip())
                 CMDLIST.append(blastnCmds(configDict["DBNAME"], fastaFile.strip(), outputFile))
@@ -292,10 +291,11 @@ def real_main():
             throwError("%s is not available. Either re-run blastn stage, or cat all your blastn files into this file name." % fofnFileName, logFileHandle)
         #####
 
+        CMDLIST.append("mkdir filter_best_alignments")
 
         for blastnFile in open(fofnFileName, "r"):
             prefix, source, end = blastnFile.strip().split(".", 2)
-            fileName = "%s.%s.blastn.filter.txt" % (prefix, source)
+            fileName = "./filter_best_alignments/%s.%s.blastn.filter.txt" % (prefix, source)
             fh = open(fileName, "w")
             bestAlignment(blastnFile.strip(), fh)
             fh.close()
@@ -328,18 +328,19 @@ def real_main():
         # 4) trim query sequence (qstart qend)
         # 5) print to a new file
 
-        # >AF484654;cluster_I;Mesorhizobium_sp._LMG_11892
-
 
         fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
         fh = open(fastaTrimmedFofn, "w")
 
-        fastaReHeadFofn = "%s.fasta.rehead.fofn" % PREFIX
-        for fastaFile in open(fastaReHeadFofn, "r"):
+        fastaFofn = whichFastaFofn(configDict)
+
+        CMDLIST.append("mkdir trim_seq")
+
+        for fastaFile in open(fastaFofn, "r"):
 
             prefix, source, end = fastaFile.strip().split(".", 2)
 
-            trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
+            trimFastaFileName = "./trim_seq/%s.%s.trimmed.fasta" % (prefix, source)
             fh.write("%s\n" % trimFastaFileName)
             trimSeq(fastaFile.strip(), trimFastaFileName, blastnMap)
 
@@ -448,20 +449,24 @@ def real_main():
 # ============= ALTERNATIVE APPROACH ============ #
 # ================= STAGE A ===================== #
     elif (stage == 'minimap'):
-        print("in minimap")
+        print("\nIn minimap stage\n")
         oldSeqDB = configDict["DBFILE"] #full path
         nuccoreDBFofn = "%s/%s" % (basePath, configDict["NUCCORE"]) # path to nuccore files
 
         miniMapFofn = "%s.minimap.fofn" % PREFIX
         fh = open(miniMapFofn, "w")
 
+        CMDLIST.append("mkdir minimap")
+
         for nuccoreFile in open(nuccoreDBFofn, "r"):
-            outputFileName = "%s.%s.minimap.paf" % (nuccoreFile.split("/")[-1].split(".")[0], oldSeqDB.split("/")[-1].split(".")[0])
+            outputFileName = "minimap/%s.%s.minimap.paf" % (nuccoreFile.split("/")[-1].split(".")[0], oldSeqDB.split("/")[-1].split(".")[0])
             fh.write("%s \n" % outputFileName)
             CMDLIST.append("echo minimapping %s" % nuccoreFile.split("/")[-1].split(".")[0])
             CMDLIST.append(minimapCmds(nuccoreFile.strip(), oldSeqDB, outputFileName))
 
         fh.close()
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
+
         nextStage = 'minimap_filter'
         nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
@@ -472,48 +477,79 @@ def real_main():
 
 # ================= STAGE B ===================== #
     elif (stage == 'minimap_filter'):
-        # test('In minimap_filter')
-
+        print("\nIn minimap_filter stage\n")
         # Col 10: Mismatches
         # Col 11: Alignment length
 
         # if mismatches / alignment length < 25% -> throw out
-        # Collet the headers of the fasta files with +75% similarity
-        # Go back into the database to retrieve those sequences
-        # Then blast those sequences
-
+        # Collect the headers of the fasta files with +75% similarity
 
         # Filtered fasta file fofn
-        # fofnFileName = "%s.minimap_filter.fofn" % PREFIX
-        # fh = open(fofnFileName, "w")
+        fofnFileName = "%s.minimap_filter.fofn" % PREFIX
+        fh = open(fofnFileName, "w")
 
         pafFofnFile = "%s.minimap.fofn" % PREFIX
 
+        # Parse the fofn file
+        nuccoreDBFofn = "%s/%s" % (basePath, configDict["NUCCORE"]) # path to nuccore fofn
+        nuccoreFilePathDict = {}
+        for filePath in open(nuccoreDBFofn, "r"):
+            fastaFileID = filePath.split("/")[-1].split(".")[0]
+            nuccoreFilePathDict[fastaFileID] = filePath.strip()
+        #####
+
+        CMDLIST.append("mkdir minimap_filter")
+
+        # extract the sequences
         for pafFile in open(pafFofnFile, "r"):
-            # Parse fasta file (name conversion)
-            origFastaFileName = pafFile.strip()[:-3] # exclude the file ending
-            newFastaFileName = origFastaFileName + "filtered.fasta"
-            # ch = open(newFastaFileName, "w")
-            # new fasta file
-            for line in open(pafFile.strip(), "r"):
-                alignData = line.split("\t")
 
-                numMismatches = float(alignData[9]) # Col 10
-                alignLen = float(alignData[10]) # Col 11
-                print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
-                if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
-                    print("Take %s" % alignData[5])# Col 6
+            # If you already ran it successfully
+            try:
+                fileIsEmpty = stat(pafFile.strip()).st_size
+            except:
+                # skip to the next one
+                # print("File %s already removed" % pafFile.strip())
+                continue
 
+            if fileIsEmpty == 0:
+                # Matters most during the first run, since this is just cleaning up the directory
+                CMDLIST.append("rm %s" % pafFile.strip()) # remove empty files
+            else:
+                fastaFileID = pafFile.split(".")[0] # exclude the file ending
+                newFastaFileName = "minimap_filter/" + fastaFileID + ".filtered.fasta"
+                alignSet = set([])
+                for line in open(pafFile.strip(), "r"):
+                    alignData = line.split("\t")
 
-                    # Test if the sequence length is long enough
-                    # header = alignData[5] # Col 6
-                    # find sequence with this header and add to new fasta
+                    numMismatches = float(alignData[9]) # Col 10
+                    alignLen = float(alignData[10]) # Col 11
+                    # print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
+                    if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
+                        # good enough alignment
+                        alignSet.add(alignData[5])
+                    #####
                 #####
-                # Low quality alignment
+                if alignSet:
+                    # list is not empty
+                    extractIDs = "/" + "/,/".join(alignSet) + "/"
+                    extractCmd = """gunzip -dc %s | awk '%s{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
+                    CMDLIST.append(extractCmd)
+                    fh.write("%s\n" % newFastaFileName)
+                #####
             #####
         #####
 
-        # fh.close()
+        fh.close()
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
+
+        # Continue with blast
+        nextStage = 'set_db'
+        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
+
+        CMDLIST.append(nextCmd)
+        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
+        launch(shFileName)
+
 
     return 0
 #==============================================================
