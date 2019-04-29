@@ -29,7 +29,7 @@ def real_main():
     parser = OptionParser(usage)
 
     # restartJob_def = 'esearch'
-    restartJob_def = 'esearch'
+    restartJob_def = 'minimap'
     parser.add_option( "-s", \
                        "--restartJob", \
                        type    = 'str', \
@@ -75,14 +75,14 @@ def real_main():
     if (configDict["PATH"] == 'minimap'):
          # Check if stage is valid
         if nextStep not in minimap_stages:
-            print("'%s' is not a valid stage." % nextStep)
+            print("'%s' is not a valid stage for minimap pipeline" % nextStep)
             assert False
         #####
 
     elif (configDict["PATH"] == 'edirect'):
         # Check if stage is valid
         if nextStep not in edirect_stages:
-            print("'%s' is not a valid stage." % nextStep)
+            print("'%s' is not a valid stage for edirect pipeline" % nextStep)
             assert False
         #####
 
@@ -116,11 +116,12 @@ def real_main():
     # Continue adding commands
     cdFolder  = "cd %s" % (configDict["PREFIX"])
     launchCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s/%s" % (basePath, configFile, nextStep, basePath, basePath, logFile)
-    cdOut = "cd .." # go back out
+    cdOut = "cd %s" % basePath # go back out
     cleanUpCmd = "mv %s_*.sh ./%s" % (configDict["PREFIX"], configDict["PREFIX"]) # Move stuff into directory
 
     cmdList.append(cdFolder)
     cmdList.append(launchCmd)
+    cmdList.append(cdOut)
     cmdList.append(cleanUpCmd)
 
     shFileName = createShFile(cmdList, basePath, configDict['PREFIX'], 'launch')
