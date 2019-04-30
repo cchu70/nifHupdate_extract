@@ -36,8 +36,13 @@ def real_main():
     logFile     = argv[4]
 
 
+
     # tracking time
     logFileHandle = open(logFile, "a")
+
+    if (stage == "esearch" or stage == "minimap"):
+        logFileHandle.write("\n=============== RESTART =================\n")
+
     logFileHandle.write("================================\n")
     logFileHandle.write("Stage: %s\n" % stage)
     logFileHandle.write("Time Start: %s\n" % datetime.datetime.now())
@@ -61,7 +66,7 @@ def real_main():
 # the search term.
 
     if (stage == 'esearch'):
-        logFileHandle.write("\n=============== RESTART =================\n")
+
         # Track esearch text files
         esearchFofn = "%s.esearch.fofn" % PREFIX
         fh = open(esearchFofn, "w")
@@ -395,7 +400,7 @@ def real_main():
         pafFofnFile = "%s.minimap.fofn" % PREFIX
 
         # Parse the fofn file
-        nuccoreDBFofn = "%s/%s" % (basePath, configDict["NUCCORE"]) # path to nuccore fofn
+        nuccoreDBFofn =configDict["NUCCORE"].strip() # path to nuccore fofn
         nuccoreFilePathDict = {}
         for filePath in open(nuccoreDBFofn, "r"):
             fastaFileID = filePath.split("/")[-1].split(".")[0]
@@ -425,11 +430,12 @@ def real_main():
                 extractIDs = "/" + "/,/".join(alignSet) + "/"
                 extractCmd = """gunzip -dc %s | awk '%s{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
                 CMDLIST.append(extractCmd)
+                CMDLIST.append("mv %s ./minimap_filter" % newFastaFileName)
                 fh.write("%s/%s/minimap_filter/%s\n" % (basePath, PREFIX, newFastaFileName)) # tracking directory
             #####
             #####
         #####
-        CMDLIST.append("mv *.filtered.fasta ./minimap_filter")
+        # CMDLIST.append("mv *.filtered.fasta ./minimap_filter")
 
         fh.close()
 
