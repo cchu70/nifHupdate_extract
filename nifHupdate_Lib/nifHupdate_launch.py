@@ -272,6 +272,8 @@ def real_main():
         clusterFileHandles = {}
         fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
 
+        CMDLIST.append("mkdir clusters")
+
         for fastaTrimmedFileName in open(fastaTrimmedFofn, "r"):
             prefix, source, end = fastaTrimmedFileName.split(".", 2)
 
@@ -298,7 +300,7 @@ def real_main():
                         except:
                             # new file
                             fh = open(fileName, "a")
-                            ch.write("%s\n" % fileName)
+                            ch.write("%s/%s/clusters/%s\n" % (basePath, PREFIX, fileName))
                             clusterFileHandles[fileName] = fh
                     #####
                 #####
@@ -310,6 +312,7 @@ def real_main():
         for clusterFileHandle in clusterFileHandles:
             clusterFileHandles[clusterFileHandle].close()
 
+        CMDLIST.append("mv *.trimmed.fasta clusters/")
         nextStage = 'deduplicate'
 
 
@@ -318,7 +321,7 @@ def real_main():
     # cd-hit-dup -i fasta -o output
         print('In deduplication stage!')
 
-        CMDLIST.append("mkdir clusters")
+        CMDLIST.append("mkdir clusters_dup")
 
         clusterFastaFofn = "%s.cluster_fasta.fofn" % PREFIX
 
@@ -331,7 +334,7 @@ def real_main():
         #####
         rmCmd = 'rm -r *.clstr'
         CMDLIST.append(rmCmd)
-        CMDLIST.append("mv *.dup.fasta ./clusters")
+        CMDLIST.append("mv *.dup.fasta ./clusters_dup")
         nextStage = 'end'
 
 # ================= STAGE 9 ===================== #
