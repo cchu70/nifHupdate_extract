@@ -128,7 +128,7 @@ def real_main():
     shFileName = createShFile(cmdList, basePath, configDict['PREFIX'], 'launch')
     # Stop if shFileName fails
     if ( not isfile(shFileName)):
-        throwError("%s not available." % ( shFileName ) )
+        throwError("%s not available." % ( shFileName ))
 
     launch(shFileName)
 
