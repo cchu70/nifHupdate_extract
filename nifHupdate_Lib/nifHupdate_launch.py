@@ -4,7 +4,7 @@ __date__ ="2/24/19"
 
 from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, \
  throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate, minimapCmds, mapEsearch, reHead, \
- def_minimap_align_len_cutoff
+ def_minimap_align_len_cutoff, whichFastaFofn, extractFileName
 
 from os.path import abspath, join, isfile
 
@@ -29,28 +29,11 @@ import threading
 # ======================================================
 
 def real_main():
-
-    # TESTING
-    # test("In Launch File")
-    # ######
-
-
     # Read the command line information
     configFile  = argv[1]
     stage       = argv[2]
     basePath    = argv[3]
     logFile     = argv[4]
-
-    # TESTING
-    # test("ConfigFile %s" % configFile.split("/")[-1], "stage %s" % stage, "basePath %s" % basePath)
-    ######
-
-
-    # for year in range(startDate, endDate):
-    #     if (year == startDate):
-    #         startDate = configDict["START"]
-    #     if (year == endDate):
-    #         startDate = configDict["END"]
 
 
     # tracking time
@@ -58,8 +41,6 @@ def real_main():
     logFileHandle.write("================================\n")
     logFileHandle.write("Stage: %s\n" % stage)
     logFileHandle.write("Time Start: %s\n" % datetime.datetime.now())
-    #tic = time.process_time()
-
 
     # Read the config file
     configDict = parseConfig(configFile, basePath, logFileHandle)
@@ -75,20 +56,12 @@ def real_main():
     PREFIX = configDict["PREFIX"]
 
 
-    # # Move into current running directory
-    # cdFolder  = "cd %s" % (configDict["PREFIX"])
-    # CMDLIST.append(cdFolder)
-
-    # TESTING
-    # test("PREFIX: %s" % PREFIX, "STARTDATE: %s" % startDate, "ENDDATE: %s" % endDate)
-    ######
-
-
 # ================= STAGE 1 ===================== #
-# esearch: getting the intial records and accession number
+# esearch: return all accession numbers to records associated with
+# the search term.
 
     if (stage == 'esearch'):
-
+        logFileHandle.write("\n=============== RESTART =================\n")
         # Track esearch text files
         esearchFofn = "%s.esearch.fofn" % PREFIX
         fh = open(esearchFofn, "w")
@@ -97,7 +70,6 @@ def real_main():
             outputfile = "%s_%s.esearch.txt\n" % (PREFIX, year)
 
             # Replace with literal year
-
             if (year == startDate):
                 year = configDict["START"]
             elif (year == endDate):
@@ -106,35 +78,15 @@ def real_main():
 
             CMDLIST.append("echo esearch for year %s..." % year)
             CMDLIST.append(esearchCmds(configDict, year, outputfile))
-
             fh.write(outputfile)
-
+        #####
         fh.close()
 
         # Next stage
         nextStage = 'fasta'
-        echoCmd = "echo Launching next stage %s" % nextStage
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
-        CMDLIST.append(echoCmd)
-        CMDLIST.append(nextCmd)
-
-        shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
-
-
-        # # TESTING
-        # testPrintFile(shFileName)
-        # ######
-
-        launch(shFileName)
-
 
 # ================= STAGE 2 ===================== #
     elif (stage == 'fasta'):
-
-        # # TESTING
-        # test("In fasta!")
-        # ######
-
 
         fastaFofn = "%s.fasta.fofn" % PREFIX
         fh = open(fastaFofn, "w")
@@ -142,7 +94,6 @@ def real_main():
         if (not isfile(esearchFofn)):
             throwError("esearch stage failed: %s not found" % esearchFofn, logFileHandle)
         else:
-
 
             threads = []
             for esearchFile in open(esearchFofn, "r"):
@@ -168,23 +119,9 @@ def real_main():
 
         fh.close()
 
-        # testing the time it takes to run
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
-
-
         # clean tmp files
         rmCmd = "rm tmp*"
-        # Next stage
-        nextStage = 'fasta_rehead'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
         CMDLIST.append(rmCmd)
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
-
-        # # TESTING
-        # testPrintFile(shFileName)
-        # ######
-        launch(shFileName)
 
 # ================ STAGE 2.1 ==================== #
     elif(stage == 'fasta_rehead'):
@@ -210,14 +147,6 @@ def real_main():
 
         # Next stage
         nextStage = 'set_db'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
-
-        # # TESTING
-        # testPrintFile(shFileName)
-        # ######
-        launch(shFileName)
 
 # ================= STAGE 3 ===================== #
 # Check if all the files exist for a local database for stand alone alignment
@@ -233,24 +162,14 @@ def real_main():
             makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
             CMDLIST.append(makeDbCmd)
         #####
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
         nextStage = 'blastn'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s" % (basePath, configFile, nextStage, basePath, logFile)
-        CMDLIST.append(nextCmd)
-
-        shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
-        # # TESTING
-        # testPrintFile(shFileName)
-        # ######
-        launch(shFileName)
-
 
 # ================= STAGE 4 ===================== #
 # Aligning each of the query sequences to the subject sequences from local database.
 
     elif (stage == 'blastn'):
-        fastaFofn = fastaFofn = whichFastaFofn(configDict)
+        fastaFofn = whichFastaFofn(configDict)
 
         if (not isfile(fastaFofn)):
             throwError("fasta stage failed: %s not found" % esearchFofn, logFileHandle)
@@ -263,23 +182,18 @@ def real_main():
 
             for fastaFile in open(fastaFofn, "r"):
 
-                prefix, source, end = fastaFile.strip().split(".", 2)
-                outputFile = "./blastn/%s.%s.blastn.txt" % (prefix, source)
-                fh.write(outputFile + "\n") # write to blast fofn file
+                prefix, source, end = fastaFile.strip().split("/")[-1].split(".", 2)
+                outputFileName = "%s.%s.blastn.txt" % (prefix, source)
+                fh.write("%s/%s/blastn/%s\n" % (basePath, PREFIX, outputFileName))  # write to blast fofn file
                 CMDLIST.append("echo Blasting %s ..." % fastaFile.strip())
-                CMDLIST.append(blastnCmds(configDict["DBNAME"], fastaFile.strip(), outputFile))
+                CMDLIST.append(blastnCmds(configDict["DBNAME"], fastaFile.strip(), outputFileName))
 
             fh.close()
         #####
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
+
+        CMDLIST.append("mv *.blastn.txt ./blastn")
 
         nextStage = 'filter_best_alignments'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
-
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
-
-        launch(shFileName)
 
 # ================= STAGE 5 ===================== #
 # Parsing through blastn tables to find best alignment for each sequence
@@ -293,23 +207,25 @@ def real_main():
 
         CMDLIST.append("mkdir filter_best_alignments")
 
+        blastnFofn = "%s.blastnFiles.filter.fofn" % (PREFIX)
+        ch = open(blastnFofn, "w")
+
         for blastnFile in open(fofnFileName, "r"):
-            prefix, source, end = blastnFile.strip().split(".", 2)
-            fileName = "./filter_best_alignments/%s.%s.blastn.filter.txt" % (prefix, source)
+            prefix, source, end = blastnFile.strip().split("/")[-1].split(".", 2)
+            fileName = "%s.%s.blastn.filter.txt" % (prefix, source)
             fh = open(fileName, "w")
             bestAlignment(blastnFile.strip(), fh)
             fh.close()
 
+            # Fofn file
+            ch.write("%s/%s/filter_best_alignments/%s\n" % (basePath, PREFIX, fileName))
         #####
 
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
+        ch.close()
+
+        CMDLIST.append("mv *.blastn.filter.txt ./filter_best_alignments")
 
         nextStage = 'trim_seq'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
-
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
-        launch(shFileName)
 
 # ================= STAGE 6 ===================== #
 
@@ -317,43 +233,35 @@ def real_main():
 
         print('In trim_seq')
 
-        # parse the blastn files into a map
-        blastnFofn = "%s.blastnFiles.fofn" % (configDict["PREFIX"])
+        # parse the filtered blastn files into a map
+        blastnFofn = "%s.blastnFiles.filter.fofn" % (PREFIX)
         blastnMap = mapBlast(blastnFofn)
-
-        # for each year and each fasta file (fa_list.txt)
-        # 1) get the accession number
-        # 2) get associated blastn data: accession number, cluster, type?, cds/genome
-        # 3) make new record name with updated data
-        # 4) trim query sequence (qstart qend)
-        # 5) print to a new file
-
 
         fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
         fh = open(fastaTrimmedFofn, "w")
 
+        # original fasta file
         fastaFofn = whichFastaFofn(configDict)
 
         CMDLIST.append("mkdir trim_seq")
 
         for fastaFile in open(fastaFofn, "r"):
 
-            prefix, source, end = fastaFile.strip().split(".", 2)
+            # prefix, source, end = fastaFile.strip().split(".", 2)
 
-            trimFastaFileName = "./trim_seq/%s.%s.trimmed.fasta" % (prefix, source)
-            fh.write("%s\n" % trimFastaFileName)
+            # trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
+            path, fileName, fileNameHead = extractFileName(fastaFile.strip())
+            trimFastaFileName = fileNameHead + ".trimmed.fasta"
+            fh.write("%s/%s/trim_seq/%s\n" % (basePath, PREFIX, trimFastaFileName))
             trimSeq(fastaFile.strip(), trimFastaFileName, blastnMap)
 
         #####
+        CMDLIST.append("mv *.trimmed.fasta ./trim_seq")
+
         fh.close()
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
         nextStage = 'cluster'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
-        launch(shFileName)
 
 # ================= STAGE 7 ===================== #
     elif (stage == 'cluster'):
@@ -362,9 +270,8 @@ def real_main():
         ch = open(clusterFilesFofn, "w")
 
         clusterFileHandles = {}
-
-
         fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
+
         for fastaTrimmedFileName in open(fastaTrimmedFofn, "r"):
             prefix, source, end = fastaTrimmedFileName.split(".", 2)
 
@@ -394,10 +301,7 @@ def real_main():
                             ch.write("%s\n" % fileName)
                             clusterFileHandles[fileName] = fh
                     #####
-
-
                 #####
-
                 SeqIO.write(record, clusterFileHandles[fileName], "fasta")
             #####
         #####
@@ -406,49 +310,50 @@ def real_main():
         for clusterFileHandle in clusterFileHandles:
             clusterFileHandles[clusterFileHandle].close()
 
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
-
         nextStage = 'deduplicate'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
 
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
-        launch(shFileName)
 
 # ================= STAGE 8 ===================== #
     elif (stage == 'deduplicate'):
     # cd-hit-dup -i fasta -o output
         print('In deduplication stage!')
+
+        CMDLIST.append("mkdir clusters")
+
         clusterFastaFofn = "%s.cluster_fasta.fofn" % PREFIX
 
         dedupFastaFofn = "%s.cluster_fasta_dedup.fofn" % PREFIX
         fh = open(dedupFastaFofn, "w")
         for fastaFile in open(clusterFastaFofn, "r"):
             print(fastaFile)
-            deduplicate(fastaFile.strip())
+            CMDLIST.append(deduplicate(fastaFile.strip()))
             fh.write(fastaFile)
         #####
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
-
-
-
         rmCmd = 'rm -r *.clstr'
-        nextStage = 'end'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
         CMDLIST.append(rmCmd)
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
-        launch(shFileName)
+        CMDLIST.append("mv *.dup.fasta ./clusters")
+        nextStage = 'end'
+
 # ================= STAGE 9 ===================== #
     elif (stage == 'end'):
-        print("Finished!")
+        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
+        logFileHandle.close()
+
+        CMDLIST.append("mkdir ./shFiles")
+        CMDLIST.append("mv .sh ./shFiles")
+        CMDLIST.append("echo nifHpdate complete!")
+        CMDLIST.append("cat %s" % logFile)
+
+        shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
+        launch(shFileName)
+        return 0
         # print stats
-
-
 
 # ============= ALTERNATIVE APPROACH ============ #
 # ================= STAGE A ===================== #
     elif (stage == 'minimap'):
+        logFileHandle.write("\n=============== RESTART =================\n")
+
         print("\nIn minimap stage\n")
         oldSeqDB = configDict["DBFILE"] #full path
         nuccoreDBFofn = "%s/%s" % (basePath, configDict["NUCCORE"]) # path to nuccore files
@@ -459,21 +364,17 @@ def real_main():
         CMDLIST.append("mkdir minimap")
 
         for nuccoreFile in open(nuccoreDBFofn, "r"):
-            outputFileName = "minimap/%s.%s.minimap.paf" % (nuccoreFile.split("/")[-1].split(".")[0], oldSeqDB.split("/")[-1].split(".")[0])
-            fh.write("%s \n" % outputFileName)
+            outputFileName = "%s.minimap.paf" % (nuccoreFile.split("/")[-1].split(".")[0])
+            fh.write("%s/%s/minimap/%s\n" % (basePath, PREFIX, outputFileName))
             CMDLIST.append("echo minimapping %s" % nuccoreFile.split("/")[-1].split(".")[0])
             CMDLIST.append(minimapCmds(nuccoreFile.strip(), oldSeqDB, outputFileName))
 
+
         fh.close()
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
+
+        CMDLIST.append("mv *.paf ./minimap")
 
         nextStage = 'minimap_filter'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
-
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
-
-        launch(shFileName)
 
 # ================= STAGE B ===================== #
     elif (stage == 'minimap_filter'):
@@ -502,53 +403,49 @@ def real_main():
 
         # extract the sequences
         for pafFile in open(pafFofnFile, "r"):
+            fastaFileID = pafFile.split("/")[-1].split(".")[0] # exclude the file ending
+            newFastaFileName = fastaFileID + ".filtered.fasta"
+            alignSet = set([])
+            for line in open(pafFile.strip(), "r"):
+                alignData = line.split("\t")
 
-            # If you already ran it successfully
-            try:
-                fileIsEmpty = stat(pafFile.strip()).st_size
-            except:
-                # skip to the next one
-                # print("File %s already removed" % pafFile.strip())
-                continue
-
-            if fileIsEmpty == 0:
-                # Matters most during the first run, since this is just cleaning up the directory
-                CMDLIST.append("rm %s" % pafFile.strip()) # remove empty files
-            else:
-                fastaFileID = pafFile.split(".")[0] # exclude the file ending
-                newFastaFileName = "minimap_filter/" + fastaFileID + ".filtered.fasta"
-                alignSet = set([])
-                for line in open(pafFile.strip(), "r"):
-                    alignData = line.split("\t")
-
-                    numMismatches = float(alignData[9]) # Col 10
-                    alignLen = float(alignData[10]) # Col 11
-                    # print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
-                    if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
-                        # good enough alignment
-                        alignSet.add(alignData[5])
-                    #####
-                #####
-                if alignSet:
-                    # list is not empty
-                    extractIDs = "/" + "/,/".join(alignSet) + "/"
-                    extractCmd = """gunzip -dc %s | awk '%s{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
-                    CMDLIST.append(extractCmd)
-                    fh.write("%s\n" % newFastaFileName)
+                numMismatches = float(alignData[9]) # Col 10
+                alignLen = float(alignData[10]) # Col 11
+                # print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
+                if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
+                    # good enough alignment
+                    alignSet.add(alignData[5])
                 #####
             #####
+            if alignSet:
+                # list is not empty
+                extractIDs = "/" + "/,/".join(alignSet) + "/"
+                extractCmd = """gunzip -dc %s | awk '%s{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
+                CMDLIST.append(extractCmd)
+                fh.write("%s/%s/minimap_filter/%s\n" % (basePath, PREFIX, newFastaFileName)) # tracking directory
+            #####
+            #####
         #####
+        CMDLIST.append("mv *.filtered.fasta ./minimap_filter")
 
         fh.close()
-        logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
 
         # Continue with blast
         nextStage = 'set_db'
-        nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
+    #####
 
-        CMDLIST.append(nextCmd)
-        shFileName = createShFile(CMDLIST, basePath, configDict["PREFIX"], stage)
-        launch(shFileName)
+
+    # =============== MOVE TO NEXT STAGE =============== #
+
+    logFileHandle.write("End Time: %s\n" % datetime.datetime.now())
+    logFileHandle.close()
+
+    echoCmd = "echo Launching next stage %s" % nextStage
+    nextCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s\n" % (basePath, configFile, nextStage, basePath, logFile)
+    CMDLIST.append(echoCmd)
+    CMDLIST.append(nextCmd)
+    shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
+    launch(shFileName)
 
 
     return 0

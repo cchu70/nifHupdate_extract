@@ -205,7 +205,8 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
 
             cluster = blastnData.sseqid.split(';')[1]
 
-            organism = record.description;
+            # organism = record.description;
+            organism = record.description.split(None, 1)[1]; # for nuccore
 
             header = "%s;%s;%s" % (record.id, cluster, organism)
             print(header)
@@ -264,9 +265,9 @@ def reHead(fastaFileName, esearchMap, outputFile):
 def whichFastaFofn(configDict):
     fastaFofn = ""
     if (configDict['PATH'] == 'edirect'):
-        fastaFofn = "%s.fasta.rehead.fofn" % PREFIX
+        fastaFofn = "%s.fasta.rehead.fofn" % configDict['PREFIX']
     elif (configDict['PATH'] == 'minimap'):
-        fastaFofn = "%s.minimap_filter.fofn" % PREFIX
+        fastaFofn = "%s.minimap_filter.fofn" % configDict['PREFIX']
 
     return fastaFofn
 
@@ -301,8 +302,16 @@ def deduplicate(fastaFile):
     outputFile = "%s.%s.dup.fasta" % (cluster, source)
     cdHitDupCmd = "cd-hit-dup -i %s -o %s" % (fastaFile, outputFile)
     print(cdHitDupCmd)
-    n = subprocess.Popen(cdHitDupCmd, shell=True)
-    n.poll()
+    # n = subprocess.Popen(cdHitDupCmd, shell=True)
+    # n.poll()
+    return cdHitDupCmd
+
+#========================
+def extractFileName(filePath):
+    path = filePath.split("/")[: -1]
+    fileName = filePath.split("/")[-1]
+    fileNameHead = fileName.split(".")[0]
+    return path, fileName, fileNameHead
 
 #========================
 def throwError(errorMessage, fh):
