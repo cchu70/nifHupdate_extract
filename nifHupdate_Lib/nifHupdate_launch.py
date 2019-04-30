@@ -359,7 +359,7 @@ def real_main():
 
         print("\nIn minimap stage\n")
         oldSeqDB = configDict["DBFILE"] #full path
-        nuccoreDBFofn = "%s/%s" % (basePath, configDict["NUCCORE"]) # path to nuccore files
+        nuccoreDBFofn = configDict["NUCCORE"] # path to nuccore files
 
         miniMapFofn = "%s.minimap.fofn" % PREFIX
         fh = open(miniMapFofn, "w")
