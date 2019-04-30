@@ -113,6 +113,7 @@ def real_main():
     #####
 
 
+
     # Continue adding commands
     cdFolder  = "cd %s" % (configDict["PREFIX"])
     launchCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s/%s" % (basePath, configFile, nextStep, basePath, basePath, logFile)
@@ -129,10 +130,6 @@ def real_main():
     if ( not isfile(shFileName)):
         throwError("%s not available." % ( shFileName ) )
 
-    # ####### TESTING ######
-    # printFile(shFileName)
-    # assert False
-    # ######################
     launch(shFileName)
 
 #==============================================================
