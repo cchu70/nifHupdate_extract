@@ -340,7 +340,6 @@ def parseConfig(configFile, basePath, logFileFh):
             key, val = line.strip().split(None, 1)
             configDict[key] = val
 
-    assert False
     # check config errors and put in defaults
     # -----------------------------
     # Test prefix
