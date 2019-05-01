@@ -336,10 +336,11 @@ def parseConfig(configFile, basePath, logFileFh):
 
     configDict = {}
     for line in open(configFile, "r"):
-        key, val = line.strip().split(None, 1)
-        configDict[key] = val
+        if (line[0] != "#"):
+            key, val = line.strip().split(None, 1)
+            configDict[key] = val
 
-
+    assert False
     # check config errors and put in defaults
     # -----------------------------
     # Test prefix
