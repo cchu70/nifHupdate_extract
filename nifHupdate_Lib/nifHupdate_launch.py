@@ -434,9 +434,9 @@ def real_main():
             #####
             if alignSet:
                 # list is not empty
-                extractIDs = "/" + "/,/".join(alignSet) + "/"
+                extractIDs = "|".join(alignSet) # Regex OR for exact text matches
                 # extractCmd = """gunzip -dc %s | awk '%s{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
-                extractCmd = """cat %s | awk '%s{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
+                extractCmd = """cat %s | awk '/%s/{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
                 CMDLIST.append(extractCmd)
                 CMDLIST.append("mv %s ./minimap_filter" % newFastaFileName)
                 fh.write("%s/%s/minimap_filter/%s\n" % (basePath, PREFIX, newFastaFileName)) # tracking directory
