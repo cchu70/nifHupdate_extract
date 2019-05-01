@@ -242,6 +242,11 @@ def real_main():
         blastnFofn = "%s.blastnFiles.filter.fofn" % (PREFIX)
         blastnMap = mapBlast(blastnFofn)
 
+        # for b in blastnMap:
+        #     print(blastnMap[b].qseqid, blastnMap[b].sseqid, blastnMap[b].length)
+        # assert False
+
+
         fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
         fh = open(fastaTrimmedFofn, "w")
 
@@ -256,6 +261,7 @@ def real_main():
 
             # trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
             path, fileName, fileNameHead = extractFileName(fastaFile.strip())
+
             trimFastaFileName = fileNameHead + ".trimmed.fasta"
             fh.write("%s/%s/trim_seq/%s\n" % (basePath, PREFIX, trimFastaFileName))
             trimSeq(fastaFile.strip(), trimFastaFileName, blastnMap)
@@ -305,18 +311,18 @@ def real_main():
                         except:
                             # new file
                             fh = open(fileName, "a")
-                            ch.write("%s/%s/clusters/%s\n" % (basePath, PREFIX, fileName))
                             clusterFileHandles[fileName] = fh
                     #####
                 #####
                 SeqIO.write(record, clusterFileHandles[fileName], "fasta")
             #####
         #####
-        ch.close()
 
         for clusterFileHandle in clusterFileHandles:
             clusterFileHandles[clusterFileHandle].close()
+            ch.write("%s/%s/clusters/%s\n" % (basePath, PREFIX, clusterFileHandle))
 
+        ch.close()
         CMDLIST.append("mv *.trimmed.fasta clusters/")
         nextStage = 'deduplicate'
 
@@ -334,7 +340,8 @@ def real_main():
         fh = open(dedupFastaFofn, "w")
         for fastaFile in open(clusterFastaFofn, "r"):
             print(fastaFile)
-            CMDLIST.append(deduplicate(fastaFile.strip()))
+            # CMDLIST.append(deduplicate(fastaFile.strip()))
+            deduplicate(fastaFile.strip())
             fh.write(fastaFile)
         #####
         rmCmd = 'rm -r *.clstr'
@@ -348,7 +355,7 @@ def real_main():
         logFileHandle.close()
 
         CMDLIST.append("mkdir ./shFiles")
-        CMDLIST.append("mv .sh ./shFiles")
+        CMDLIST.append("mv *.sh ./shFiles")
         CMDLIST.append("echo nifHpdate complete!")
         CMDLIST.append("cat %s" % logFile)
 
@@ -376,11 +383,11 @@ def real_main():
             fh.write("%s/%s/minimap/%s\n" % (basePath, PREFIX, outputFileName))
             CMDLIST.append("echo minimapping %s" % nuccoreFile.split("/")[-1].split(".")[0])
             CMDLIST.append(minimapCmds(nuccoreFile.strip(), oldSeqDB, outputFileName))
-
+            CMDLIST.append("mv %s ./minimap" % outputFileName)
 
         fh.close()
 
-        CMDLIST.append("mv *.paf ./minimap")
+
 
         nextStage = 'minimap_filter'
 
@@ -454,6 +461,7 @@ def real_main():
     CMDLIST.append(echoCmd)
     CMDLIST.append(nextCmd)
     shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
+
     launch(shFileName)
 
 
