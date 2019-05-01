@@ -31,8 +31,8 @@ def_minimap_align_len_cutoff = 200
 # #========================
 # Allowed sets
 DATETYPES = set(["PDAT"])
-edirect_stages = set(['esearch', 'fasta', 'fasta_rehead','set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
-minimap_stages = set(['minimap', 'minimap_filter', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate'])
+edirect_stages = set(['esearch', 'fasta', 'fasta_rehead','set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end'])
+minimap_stages = set(['minimap', 'minimap_filter', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end'])
 MAX_REQUESTS = 3 # for entrex direct
 
 
@@ -166,13 +166,14 @@ def bestAlignment(blastnFile, fh):
                 if (seqAlignDict[fastaLabel][2] < pident):
                     seqAlignDict[fastaLabel] = alignmentData
         except:
-            seqAlignDict[fastaLabel] = alignmentData
+            seqAlignDict[fastaLabel] = line
         #####
     #####
 
     # Book keeping
     for label in seqAlignDict:
-        fh.write("\t".join(seqAlignDict[label]) + "\n")
+        # fh.write("\t".join(seqAlignDict[label]) + "\n")
+        fh.write(seqAlignDict[label])
 
 
 #========================
@@ -199,9 +200,10 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
             qlen = int(blastnData.qlen)
             distance = qlen - length
 
-            if (distance >= 340 and distance <= (0.5 * length)):
-                record.seq = record.seq[int(qstart):int(qend)]
-            #####
+            # if (distance >= 340 and distance <= (0.5 * qlen)):
+            #     record.seq = record.seq[int(blastnData.qstart):int(blastnData.qend)]
+            # #####
+            record.seq = record.seq[int(blastnData.qstart):int(blastnData.qend)]
 
             cluster = blastnData.sseqid.split(';')[1]
 
@@ -298,13 +300,15 @@ class BlastAlignmentData:
 #========================
 def deduplicate(fastaFile):
 
-    cluster, source, x = fastaFile.split(".", 2)
-    outputFile = "%s.%s.dup.fasta" % (cluster, source)
+    # cluster, source, x = fastaFile.split(".", 2)
+    # outputFile = "%s.%s.dup.fasta" % (cluster, source)
+    header, x = fastaFile.split("/")[-1].split(".", 1)
+    outputFile = "%s.dup.fasta" % (header)
     cdHitDupCmd = "cd-hit-dup -i %s -o %s" % (fastaFile, outputFile)
     print(cdHitDupCmd)
-    # n = subprocess.Popen(cdHitDupCmd, shell=True)
-    # n.poll()
-    return cdHitDupCmd
+    n = subprocess.Popen(cdHitDupCmd, shell=True)
+    n.poll()
+    # return cdHitDupCmd
 
 #========================
 def extractFileName(filePath):
@@ -357,6 +361,19 @@ def parseConfig(configFile, basePath, logFileFh):
         x = configDict["DBNAME"]
     except KeyError:
         configDict["DBNAME"] = def_dbname
+
+
+    try:
+        errFilePath = configDict["ERRFILE"]
+        if (not isfile(esearchFile)):
+            # make the file
+            fh = open(errFilePath, "w")
+            fh.close()
+    except:
+        configDict["ERRFILE"] = "%s/%s_err.txt" % (basePath, configDict["PREFIX"])
+        fh = open(configDict["ERRFILE"], "w")
+        fh.close()
+
     # -----------------------------
     # Test specifying what part of the pipeline to use
     try:
@@ -452,6 +469,8 @@ def parseConfig(configFile, basePath, logFileFh):
 
 #========================
 def launch(shFileName):
+    print("Launching %s" % shFileName)
+    # n = subprocess.Popen(["bash", "%s >> %s" % (shFileName, outFileName)])
     n = subprocess.Popen(["bash", shFileName])
     wait(n) # wait for the shfile to finish running before proceeding
     n.poll()
