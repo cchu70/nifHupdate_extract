@@ -22,7 +22,10 @@ def_datetype = "PDAT"
 def_elements = "Id Caption TaxId Slen CreateDate Organism Title"
 def_sorttype = ["nifH", "genome"]
 
-def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp'
+def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp sstrand'
+def_species_pident = 91.9
+def_genus_pident = 88.1
+def_family_pident = 75
 def_dbfiles = ["nhr", "nsd", "nin", "nsi", "nsq"]
 def_dbname = "DB"
 def_evalue = 0.001
@@ -150,6 +153,7 @@ def blastnCmds(dbName, fastaFile, blastOutputFile, fmtString = def_blastnOutfmt)
 
 #========================
 def bestAlignment(blastnFile, fh):
+    # def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp sstrand'
     seqAlignDict = {}
     for line in open(blastnFile, "r"):
         alignmentData = line.split()
@@ -157,23 +161,30 @@ def bestAlignment(blastnFile, fh):
         pident     = alignmentData[2]
         qcovhsp    = alignmentData[14]
 
+        # try:
+        #     # compare previous qcovhsp, and change if better score
+        #     if (seqAlignDict[fastaLabel][14] < qcovhsp):
+        #         seqAlignDict[fastaLabel] = alignmentData
+        #         # pass in everything about the alignment
+        #     elif (seqAlignDict[fastaLabel][14] == qcovhsp):
+        #         if (seqAlignDict[fastaLabel][2] < pident):
+        #             seqAlignDict[fastaLabel] = alignmentData
+        # except:
+        #     seqAlignDict[fastaLabel] = line
+        # #####
+
         try:
-            # compare previous qcovhsp, and change if better score
-            if (seqAlignDict[fastaLabel][14] < qcovhsp):
-                seqAlignDict[fastaLabel] = alignmentData
-                # pass in everything about the alignment
-            elif (seqAlignDict[fastaLabel][14] == qcovhsp):
-                if (seqAlignDict[fastaLabel][2] < pident):
-                    seqAlignDict[fastaLabel] = alignmentData
-        except:
-            seqAlignDict[fastaLabel] = line
-        #####
+            # Test pident if > 91%
+            if (pident > def_species_pident):
+                seqAlignDict[fastaLabel].append(alignmentData)
+        except KeyError:
+            eqAlignDict[fastaLabel] = [alignmentData]
     #####
 
     # Book keeping
     for label in seqAlignDict:
-        # fh.write("\t".join(seqAlignDict[label]) + "\n")
-        fh.write(seqAlignDict[label])
+        for alignment in seqAlignDict[label]:
+            fh.write(alignment)
 
 
 #========================

@@ -231,6 +231,7 @@ def real_main():
         CMDLIST.append("mv *.blastn.filter.txt ./filter_best_alignments")
 
         nextStage = 'trim_seq'
+        assert False
 
 # ================= STAGE 6 ===================== #
 
