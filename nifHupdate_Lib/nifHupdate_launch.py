@@ -4,9 +4,9 @@ __date__ ="2/24/19"
 
 from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, \
  throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate, minimapCmds, mapEsearch, reHead, \
- def_minimap_align_len_cutoff, whichFastaFofn, extractFileName
+ def_minimap_align_len_cutoff, whichFastaFofn, extractFileName, reHead_fasta, getBlastnSeq
 
-from os.path import abspath, join, isfile
+from os.path import abspath, join, isfile, isdir
 
 from optparse import OptionParser
 
@@ -162,9 +162,9 @@ def real_main():
         # ######
 
         # check database already exists
-        if (not verifyDb(configDict["DBFILE"])):
+        if (not verifyDb(configDict["DBNAME"])):
             # move to next stage
-            makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
+            makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBNAME"], basePath, PREFIX, configDict["DBNAME"])
             CMDLIST.append(makeDbCmd)
         #####
 
@@ -231,7 +231,7 @@ def real_main():
         CMDLIST.append("mv *.blastn.filter.txt ./filter_best_alignments")
 
         nextStage = 'trim_seq'
-        assert False
+        # assert False
 
 # ================= STAGE 6 ===================== #
 
@@ -241,34 +241,41 @@ def real_main():
 
         # parse the filtered blastn files into a map
         blastnFofn = "%s.blastnFiles.filter.fofn" % (PREFIX)
-        blastnMap = mapBlast(blastnFofn)
+        # blastnMap = mapBlast(blastnFofn)
 
-        # for b in blastnMap:
-        #     print(blastnMap[b].qseqid, blastnMap[b].sseqid, blastnMap[b].length)
-        # assert False
+        # # for b in blastnMap:
+        # #     print(blastnMap[b].qseqid, blastnMap[b].sseqid, blastnMap[b].length)
+        # # assert False
 
 
-        fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
+        fastaTrimmedFofn = "%s.fasta.trim.fofn" % PREFIX
         fh = open(fastaTrimmedFofn, "w")
 
-        # original fasta file
-        fastaFofn = whichFastaFofn(configDict)
+        # # original fasta file
+        # fastaFofn = whichFastaFofn(configDict)
+        if (not isdir("trim_seq")):
+            CMDLIST.append("mkdir trim_seq")
 
-        CMDLIST.append("mkdir trim_seq")
+        # for fastaFile in open(fastaFofn, "r"):
 
-        for fastaFile in open(fastaFofn, "r"):
+        #     # prefix, source, end = fastaFile.strip().split(".", 2)
 
-            # prefix, source, end = fastaFile.strip().split(".", 2)
+        #     # trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
+        #     path, fileName, fileNameHead = extractFileName(fastaFile.strip())
 
-            # trimFastaFileName = "%s.%s.trimmed.fasta" % (prefix, source)
-            path, fileName, fileNameHead = extractFileName(fastaFile.strip())
+        #     trimFastaFileName = fileNameHead + ".trimmed.fasta"
+        #     fh.write("%s/%s/trim_seq/%s\n" % (basePath, PREFIX, trimFastaFileName))
+        #     trimSeq(fastaFile.strip(), trimFastaFileName, blastnMap)
 
-            trimFastaFileName = fileNameHead + ".trimmed.fasta"
+        # #####
+        for blastnFile in open(blastnFofn, "r"):
+            path, fileName, fileNameHead = extractFileName(blastnFile.strip())
+            # fileId = blastnFile.split(".")[0]
+            trimFastaFileName = fileNameHead + ".trim.fasta"
             fh.write("%s/%s/trim_seq/%s\n" % (basePath, PREFIX, trimFastaFileName))
-            trimSeq(fastaFile.strip(), trimFastaFileName, blastnMap)
+            getBlastnSeq(blastnFile.strip(), trimFastaFileName)
 
-        #####
-        CMDLIST.append("mv *.trimmed.fasta ./trim_seq")
+        CMDLIST.append("mv *.trim.fasta ./trim_seq")
 
         fh.close()
 
@@ -282,7 +289,7 @@ def real_main():
         ch = open(clusterFilesFofn, "w")
 
         clusterFileHandles = {}
-        fastaTrimmedFofn = "%s.fasta.trimmed.fofn" % PREFIX
+        fastaTrimmedFofn = "%s.fasta.trim.fofn" % PREFIX
 
         CMDLIST.append("mkdir clusters")
 
@@ -415,7 +422,9 @@ def real_main():
             nuccoreFilePathDict[fastaFileID] = filePath.strip()
         #####
 
-        CMDLIST.append("mkdir minimap_filter")
+        if (not isdir("minimap_filter")):
+            CMDLIST.append("echo Making new directory minimap_filter")
+            CMDLIST.append("mkdir minimap_filter")
 
         # extract the sequences
         for pafFile in open(pafFofnFile, "r"):
@@ -436,8 +445,12 @@ def real_main():
             if alignSet:
                 # list is not empty
                 extractIDs = "|".join(alignSet) # Regex OR for exact text matches
-                # extractCmd = """gunzip -dc %s | awk '%s{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
-                extractCmd = """cat %s | awk '/%s/{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
+                if (nuccoreFilePathDict[fastaFileID].split(".")[-1] == "gz"):
+                    extractCmd = """gunzip -dc %s | awk '/%s/{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
+                else:
+                    extractCmd = """cat %s | awk '/%s/{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
+                #####
+                CMDLIST.append("echo Retrieving %s" % ",".join(alignSet))
                 CMDLIST.append(extractCmd)
                 CMDLIST.append("mv %s ./minimap_filter" % newFastaFileName)
                 fh.write("%s/%s/minimap_filter/%s\n" % (basePath, PREFIX, newFastaFileName)) # tracking directory
@@ -449,8 +462,37 @@ def real_main():
         fh.close()
 
         # Continue with blast
-        nextStage = 'set_db'
+        nextStage = 'rehead_fasta'
+
+# ================= STAGE C ===================== #
+    elif (stage == "rehead_fasta"):
+
+        # Filtered fasta files
+        fofnFileName = "%s.minimap_filter.fofn" % PREFIX
+
+        fofnNewFileName = "%s.minimap_rehead.fofn" % PREFIX
+        fh = open(fofnNewFileName, "w")
+
+
+
+        for fastaFile in open(fofnFileName, "r"):
+            print(fastaFile)
+            path, fileName, fileNameHead = extractFileName(fastaFile.strip())
+            newFastaFileName = fileNameHead + ".minimap_rehead.fasta"
+            fh.write("%s/%s/minimap_rehead/%s\n" % (basePath, PREFIX, newFastaFileName)) # Replace later
+            reHead_fasta(fastaFile.strip(), newFastaFileName)
+
+        fh.close()
+
+        CMDLIST.append("mkdir minimap_rehead")
+        CMDLIST.append("mv *.minimap_rehead.fasta ./minimap_rehead")
+        # CMDLIST.append("rm -r minimap_filter")
+        # CMDLIST.append("mv *.minimap_rehead.fofn *.minimap_filter.fofn")
+        # CMDLIST.append("mv minimap_rehead ./minimap_filter")
+
+        nextStage = "set_db"
     #####
+
 
 
     # =============== MOVE TO NEXT STAGE =============== #

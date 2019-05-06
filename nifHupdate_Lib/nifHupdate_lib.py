@@ -6,6 +6,8 @@ __date__ ="2/18/19"
 from os.path import abspath, join, isfile
 import os
 from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
+from Bio.Seq import Seq
 import subprocess
 import time
 from shutil import copyfile
@@ -22,7 +24,7 @@ def_datetype = "PDAT"
 def_elements = "Id Caption TaxId Slen CreateDate Organism Title"
 def_sorttype = ["nifH", "genome"]
 
-def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp sstrand'
+def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp sseq'
 def_species_pident = 91.9
 def_genus_pident = 88.1
 def_family_pident = 75
@@ -35,7 +37,7 @@ def_minimap_align_len_cutoff = 200
 # Allowed sets
 DATETYPES = set(["PDAT"])
 edirect_stages = set(['esearch', 'fasta', 'fasta_rehead','set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end'])
-minimap_stages = set(['minimap', 'minimap_filter', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end'])
+minimap_stages = set(['minimap', 'minimap_filter', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end', 'rehead_fasta'])
 MAX_REQUESTS = 3 # for entrex direct
 
 
@@ -155,11 +157,12 @@ def blastnCmds(dbName, fastaFile, blastOutputFile, fmtString = def_blastnOutfmt)
 def bestAlignment(blastnFile, fh):
     # def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp sstrand'
     seqAlignDict = {}
+    count = 0
     for line in open(blastnFile, "r"):
         alignmentData = line.split()
         fastaLabel = alignmentData[0]
-        pident     = alignmentData[2]
-        qcovhsp    = alignmentData[14]
+        pident     = float(alignmentData[2])
+        qcovhsp    = float(alignmentData[14])
 
         # try:
         #     # compare previous qcovhsp, and change if better score
@@ -176,15 +179,23 @@ def bestAlignment(blastnFile, fh):
         try:
             # Test pident if > 91%
             if (pident > def_species_pident):
-                seqAlignDict[fastaLabel].append(alignmentData)
+                # seqAlignDict[fastaLabel].append(alignmentData)
+                alignmentData[0] += "[%d]" % count # change fasta label
+                newLine = "\t".join(alignmentData)
+                seqAlignDict[fastaLabel].append(newLine)
+                count += 1
         except KeyError:
-            eqAlignDict[fastaLabel] = [alignmentData]
+            count = 0
+            # alignmentData[0] += "[%d]" % count # change fasta label
+            # newLine = "\t".join(alignmentData)
+            seqAlignDict[fastaLabel] = [newLine]
+            count += 1
     #####
 
     # Book keeping
     for label in seqAlignDict:
-        for alignment in seqAlignDict[label]:
-            fh.write(alignment)
+        for data in seqAlignDict[label]:
+            fh.write("%s\n" % data)
 
 
 #========================
@@ -227,6 +238,21 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
             record.description = ""
             SeqIO.write(record, outputFileHandle, "fasta")
 
+
+def getBlastnSeq(blastnFile, outputFile):
+    # fh = open(outputFile, "w")
+    records = []
+    for line in open(blastnFile, "r"):
+        sseq = line.split()[-1] # sequence is the last line
+        Id = line.split()[0] # accession number and description
+        seq_obj = Seq(sseq)
+        record = SeqRecord(seq_obj, Id, '', '')
+        records.append(record)
+    ####
+
+    # assert False
+    SeqIO.write(records, outputFile, "fasta")
+
 #========================
 def mapBlast(blastnFofn):
     blastnMap = {}
@@ -252,8 +278,8 @@ def mapEsearch(esearchFofn):
     return esearchMap
 
 #========================
-def reHead(fastaFileName, esearchMap, outputFile):
-    fh = open(outputFile, "w")
+def reHead(fastaFileName, esearchMap, outputFileName):
+    fh = open(outputFileName, "w")
 
     currAcc = ""
     for record in SeqIO.parse(fastaFileName, "fasta"):
@@ -274,13 +300,30 @@ def reHead(fastaFileName, esearchMap, outputFile):
     #####
     fh.close()
 
+def reHead_fasta(fastaFileName, outputFileName):
+    fh = open(outputFileName, "w")
+    for record in SeqIO.parse(fastaFileName, "fasta"):
+        # acc = record.id
+        headerData = record.description.split(None, 1)
+        description = "_".join(headerData[1].split()) # so blastn will keep everything
+        headerData[1] = description
+        # record.id = acc + ";" + description
+        record.id = ";".join(headerData)
+        record.description = ""
+        print(record)
+
+        SeqIO.write(record, fh, "fasta")
+    #####
+    fh.close()
+
+    # SeqIO.write(records, "tmp.fasta", "fasta")
 #========================
 def whichFastaFofn(configDict):
     fastaFofn = ""
     if (configDict['PATH'] == 'edirect'):
         fastaFofn = "%s.fasta.rehead.fofn" % configDict['PREFIX']
     elif (configDict['PATH'] == 'minimap'):
-        fastaFofn = "%s.minimap_filter.fofn" % configDict['PREFIX']
+        fastaFofn = "%s.minimap_rehead.fofn" % configDict['PREFIX']
 
     return fastaFofn
 
