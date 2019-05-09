@@ -165,7 +165,10 @@ def real_main():
         if (not verifyDb(configDict["DBNAME"])):
             # move to next stage
             makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
+            CMDLIST.append("echo make blastn db")
             CMDLIST.append(makeDbCmd)
+        else:
+            CMDLIST.append("DB files already exist")
         #####
 
         nextStage = 'blastn'
@@ -270,11 +273,15 @@ def real_main():
         #     trimSeq(fastaFile.strip(), trimFastaFileName, blastnMap)
 
         # #####
+
         for blastnFile in open(blastnFofn, "r"):
             path, fileName, fileNameHead = extractFileName(blastnFile.strip())
             # fileId = blastnFile.split(".")[0]
+            print(fileName)
+
             trimFastaFileName = fileNameHead + ".trim.fasta"
             fh.write("%s/%s/trim_seq/%s\n" % (basePath, PREFIX, trimFastaFileName))
+
             getBlastnSeq(blastnFile.strip(), trimFastaFileName)
 
         CMDLIST.append("mv *.trim.fasta ./trim_seq")
@@ -293,7 +300,9 @@ def real_main():
         clusterFileHandles = {}
         fastaTrimmedFofn = "%s.fasta.trim.fofn" % PREFIX
 
-        CMDLIST.append("mkdir clusters")
+        if (not isdir("clusters")):
+            CMDLIST.append("mkdir clusters")
+        #####
 
         for fastaTrimmedFileName in open(fastaTrimmedFofn, "r"):
             prefix, source, end = fastaTrimmedFileName.split(".", 2)
@@ -429,30 +438,30 @@ def real_main():
             CMDLIST.append("mkdir minimap_filter")
 
         # extract the sequences
-        for pafFile in open(pafFofnFile, "r"):
+        for pafFilePath in open(pafFofnFile, "r"):
             fastaFileID = pafFile.split("/")[-1].split(".")[0] # exclude the file ending
             newFastaFileName = fastaFileID + ".filtered.fasta"
-            alignSet = set([])
-            for line in open(pafFile.strip(), "r"):
-                alignData = line.split("\t")
+            alignSetAccessions = minimap_filter_alignments(pafFilePath.strip())
+            # for line in open(pafFile.strip(), "r"):
+            #     alignData = line.split("\t")
 
-                numMismatches = float(alignData[9]) # Col 10
-                alignLen = float(alignData[10]) # Col 11
-                # print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
-                if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
-                    # good enough alignment
-                    alignSet.add(alignData[5])
-                #####
-            #####
-            if alignSet:
+            #     numMismatches = float(alignData[9]) # Col 10
+            #     alignLen = float(alignData[10]) # Col 11
+            #     # print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
+            #     if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
+            #         # good enough alignment
+            #         alignSetAccessions.add(alignData[5])
+            #     #####
+            # #####
+            if alignSetAccessions:
                 # list is not empty
-                extractIDs = "|".join(alignSet) # Regex OR for exact text matches
+                extractIDs = "|".join(alignSetAccessions) # Regex OR for exact text matches
                 if (nuccoreFilePathDict[fastaFileID].split(".")[-1] == "gz"):
                     extractCmd = """gunzip -dc %s | awk '/%s/{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
                 else:
                     extractCmd = """cat %s | awk '/%s/{p++;print;next} /^>/{p=0} p' > %s""" % (nuccoreFilePathDict[fastaFileID], extractIDs, newFastaFileName)
                 #####
-                CMDLIST.append("echo Retrieving %s" % ",".join(alignSet))
+                CMDLIST.append("echo Retrieving %s" % ",".join(alignSetAccessions))
                 CMDLIST.append(extractCmd)
                 CMDLIST.append("mv %s ./minimap_filter" % newFastaFileName)
                 fh.write("%s/%s/minimap_filter/%s\n" % (basePath, PREFIX, newFastaFileName)) # tracking directory
