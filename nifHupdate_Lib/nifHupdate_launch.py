@@ -439,7 +439,7 @@ def real_main():
 
         # extract the sequences
         for pafFilePath in open(pafFofnFile, "r"):
-            fastaFileID = pafFile.split("/")[-1].split(".")[0] # exclude the file ending
+            fastaFileID = pafFilePath.split("/")[-1].split(".")[0] # exclude the file ending
             newFastaFileName = fastaFileID + ".filtered.fasta"
             alignSetAccessions = minimap_filter_alignments(pafFilePath.strip())
             # for line in open(pafFile.strip(), "r"):
