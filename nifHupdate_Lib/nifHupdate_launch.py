@@ -164,7 +164,7 @@ def real_main():
         # check database already exists
         if (not verifyDb(configDict["DBNAME"])):
             # move to next stage
-            makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBNAME"], basePath, PREFIX, configDict["DBNAME"])
+            makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
             CMDLIST.append(makeDbCmd)
         #####
 
@@ -180,7 +180,9 @@ def real_main():
             throwError("fasta stage failed: %s not found" % esearchFofn, logFileHandle)
         else:
 
-            CMDLIST.append("mkdir blastn")
+            if (not isdir("blastn")):
+                CMDLIST.append("mkdir blastn")
+            #####
 
             fofnFileName = "%s.blastnFiles.fofn" % (PREFIX)
             fh = open(fofnFileName, "w")
