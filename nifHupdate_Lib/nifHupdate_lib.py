@@ -245,9 +245,12 @@ def getBlastnSeq(blastnFile, outputFile):
     print(outputFile)
     for line in open(blastnFile, "r"):
         sseq = line.split()[-1] # sequence is the last line
-        Id = line.split()[0] # accession number and description
+        blastnId = line.split()[0] # accession number and description
+        acc, description = blastnId.split(";", 1)
         seq_obj = Seq(sseq)
-        record = SeqRecord(seq_obj, Id, '', '')
+
+        cluster = line.split()[1].split(";")[1]
+        record = SeqRecord(seq_obj, "%s;%s;%s" % (acc, cluster, description), '', '')
         print(record)
         # records.append(record)
         SeqIO.write(record, fh, "fasta")
