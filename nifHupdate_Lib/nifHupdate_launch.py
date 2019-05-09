@@ -342,7 +342,7 @@ def real_main():
             ch.write("%s/%s/clusters/%s\n" % (basePath, PREFIX, clusterFileHandle))
 
         ch.close()
-        CMDLIST.append("mv *.trimmed.fasta clusters/")
+        CMDLIST.append("mv *.trim.fasta clusters/")
         nextStage = 'deduplicate'
 
 

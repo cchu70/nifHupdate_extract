@@ -32,6 +32,7 @@ def_dbfiles = ["nhr", "nsd", "nin", "nsi", "nsq"]
 def_dbname = "DB"
 def_evalue = 0.001
 def_minimap_align_len_cutoff = 200
+def_blastn_align_len_cutoff = 200
 
 # #========================
 # Allowed sets
@@ -162,23 +163,12 @@ def bestAlignment(blastnFile, fh):
         alignmentData = line.split()
         fastaLabel = alignmentData[0]
         pident     = float(alignmentData[2])
-        qcovhsp    = float(alignmentData[14])
-
-        # try:
-        #     # compare previous qcovhsp, and change if better score
-        #     if (seqAlignDict[fastaLabel][14] < qcovhsp):
-        #         seqAlignDict[fastaLabel] = alignmentData
-        #         # pass in everything about the alignment
-        #     elif (seqAlignDict[fastaLabel][14] == qcovhsp):
-        #         if (seqAlignDict[fastaLabel][2] < pident):
-        #             seqAlignDict[fastaLabel] = alignmentData
-        # except:
-        #     seqAlignDict[fastaLabel] = line
-        # #####
+        length = int(alignmentData[3])
+        # qcovhsp    = float(alignmentData[14])
 
         try:
             # Test pident if > 91%
-            if (pident > def_species_pident):
+            if (pident > def_species_pident and length > def_blastn_align_len_cutoff):
                 # seqAlignDict[fastaLabel].append(alignmentData)
                 alignmentData[0] += "[%d]" % count # change fasta label
                 newLine = "\t".join(alignmentData)
