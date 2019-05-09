@@ -240,18 +240,22 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
 
 
 def getBlastnSeq(blastnFile, outputFile):
-    # fh = open(outputFile, "w")
-    records = []
+    fh = open(outputFile, "w")
+    print(blastnFile)
+    print(outputFile)
     for line in open(blastnFile, "r"):
         sseq = line.split()[-1] # sequence is the last line
         Id = line.split()[0] # accession number and description
         seq_obj = Seq(sseq)
         record = SeqRecord(seq_obj, Id, '', '')
-        records.append(record)
+        print(record)
+        # records.append(record)
+        SeqIO.write(record, fh, "fasta")
     ####
+    fh.close()
 
     # assert False
-    SeqIO.write(records, outputFile, "fasta")
+    # SeqIO.write(records, outputFile, "fasta")
 
 #========================
 def mapBlast(blastnFofn):
@@ -315,8 +319,22 @@ def reHead_fasta(fastaFileName, outputFileName):
         SeqIO.write(record, fh, "fasta")
     #####
     fh.close()
-
     # SeqIO.write(records, "tmp.fasta", "fasta")
+
+def minimap_filter_alignments(pafFilePath):
+    alignSet = set([])
+    for line in open(pafFilePath, "r"):
+        alignData = line.split("\t")
+
+        numMismatches = float(alignData[9]) # Col 10
+        alignLen = float(alignData[10]) # Col 11
+        # print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
+        if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
+            # good enough alignment
+            alignSet.add(alignData[5])
+        #####
+    #####
+    return alignSet
 #========================
 def whichFastaFofn(configDict):
     fastaFofn = ""
