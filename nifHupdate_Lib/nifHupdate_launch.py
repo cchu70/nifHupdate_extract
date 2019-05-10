@@ -4,7 +4,7 @@ __date__ ="2/24/19"
 
 from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, \
  throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate, minimapCmds, mapEsearch, reHead, \
- def_minimap_align_len_cutoff, whichFastaFofn, extractFileName, reHead_fasta, getBlastnSeq, minimap_filter_alignments
+ whichFastaFofn, extractFileName, reHead_fasta, getBlastnSeq, minimap_filter_alignments
 
 from os.path import abspath, join, isfile, isdir
 
