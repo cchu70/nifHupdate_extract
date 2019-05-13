@@ -40,8 +40,8 @@ def real_main():
     # tracking time
     logFileHandle = open(logFile, "a")
 
-    if (stage == "esearch" or stage == "minimap"):
-        logFileHandle.write("\n=============== RESTART =================\n")
+    if (stage == "esearch"):
+        logFileHandle.write("\n############### RESTART ###########\n")
 
     logFileHandle.write("================================\n")
     logFileHandle.write("Stage: %s\n" % stage)
@@ -50,11 +50,11 @@ def real_main():
     # Read the config file
     configDict = parseConfig(configFile, basePath, logFileHandle)
 
-    if (configDict["PATH"] == 'edirect'):
-        # Get numerical year
-        startDate = parseDate(configDict["START"])
-        endDate = parseDate(configDict["END"])
-    #####
+    # if (configDict["PATH"] == 'edirect'):
+    #     # Get numerical year
+    #     startDate = parseDate(configDict["START"])
+    #     endDate = parseDate(configDict["END"])
+    # #####
 
     # FREQUENTLY USED CONSTANTS AND VARIABLES
     CMDLIST = []
@@ -153,31 +153,44 @@ def real_main():
         # Next stage
         nextStage = 'set_db'
 
-# ================= STAGE 3 ===================== #
-# Check if all the files exist for a local database for stand alone alignment
+# # ================= STAGE 3 ===================== #
+# # Check if all the files exist for a local database for stand alone alignment
 
-    elif (stage == 'set_db'):
-        # # TESTING
-        # test("In set_db!")
-        # ######
+#     elif (stage == 'set_db'):
+#         # # TESTING
+#         # test("In set_db!")
+#         # ######
+
+#         # check database already exists
+#         if (not verifyDb(configDict["DBNAME"])):
+#             # move to next stage
+#             makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
+#             CMDLIST.append("echo make blastn db")
+#             CMDLIST.append(makeDbCmd)
+#         else:
+#             CMDLIST.append("DB files already exist")
+#         #####
+
+#         nextStage = 'blastn'
+
+# ================= STAGE 4 ===================== #
+# Aligning each of the query sequences to the subject sequences from local database.
+
+    elif (stage == 'blastn'):
 
         # check database already exists
-        if (not verifyDb(configDict["DBNAME"])):
+        if (not verifyDb(configDict["PREFIX"])):
             # move to next stage
-            makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBFILE"], basePath, PREFIX, configDict["DBNAME"])
+            makeDbCmd = "makeblastdb -in %s -parse_seqids -dbtype nucl -out %s/%s/%s" % (configDict["DBFILE"], basePath, PREFIX, configDict["PREFIX"])
             CMDLIST.append("echo make blastn db")
             CMDLIST.append(makeDbCmd)
         else:
             CMDLIST.append("DB files already exist")
         #####
 
-        nextStage = 'blastn'
 
-# ================= STAGE 4 ===================== #
-# Aligning each of the query sequences to the subject sequences from local database.
-
-    elif (stage == 'blastn'):
-        fastaFofn = whichFastaFofn(configDict)
+        # fastaFofn = whichFastaFofn(configDict)
+        fastaFofn = "%s.fasta.rehead.fofn" % configDict['PREFIX']
 
         if (not isfile(fastaFofn)):
             throwError("fasta stage failed: %s not found" % esearchFofn, logFileHandle)
@@ -224,7 +237,7 @@ def real_main():
             prefix, source, end = blastnFile.strip().split("/")[-1].split(".", 2)
             fileName = "%s.%s.blastn.filter.txt" % (prefix, source)
             fh = open(fileName, "w")
-            bestAlignment(blastnFile.strip(), fh)
+            bestAlignment(blastnFile.strip(), configDict["MIN_BLASTN_ALIGNLEN"], configDict["PIDENT_CUTOFF"], fh)
             fh.close()
 
             # Fofn file
@@ -395,7 +408,9 @@ def real_main():
         miniMapFofn = "%s.minimap.fofn" % PREFIX
         fh = open(miniMapFofn, "w")
 
-        CMDLIST.append("mkdir minimap")
+        if (not isdir("minimap")):
+            CMDLIST.append("mkdir minimap")
+        #####
 
         for nuccoreFile in open(nuccoreDBFofn, "r"):
             outputFileName = "%s.minimap.paf" % (nuccoreFile.split("/")[-1].split(".")[0])
@@ -441,7 +456,7 @@ def real_main():
         for pafFilePath in open(pafFofnFile, "r"):
             fastaFileID = pafFilePath.split("/")[-1].split(".")[0] # exclude the file ending
             newFastaFileName = fastaFileID + ".filtered.fasta"
-            alignSetAccessions = minimap_filter_alignments(pafFilePath.strip())
+            alignSetAccessions = minimap_filter_alignments(pafFilePath.strip(), configDict["MIN_MINIMAP_ALIGNLEN"])
             # for line in open(pafFile.strip(), "r"):
             #     alignData = line.split("\t")
 
@@ -481,7 +496,7 @@ def real_main():
         # Filtered fasta files
         fofnFileName = "%s.minimap_filter.fofn" % PREFIX
 
-        fofnNewFileName = "%s.minimap_rehead.fofn" % PREFIX
+        fofnNewFileName = "%s.fasta.rehead.fofn" % PREFIX
         fh = open(fofnNewFileName, "w")
 
 
@@ -501,7 +516,7 @@ def real_main():
         # CMDLIST.append("mv *.minimap_rehead.fofn *.minimap_filter.fofn")
         # CMDLIST.append("mv minimap_rehead ./minimap_filter")
 
-        nextStage = "set_db"
+        nextStage = "blastn"
     #####
 
 
