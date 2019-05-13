@@ -28,7 +28,6 @@ def real_main():
 
     parser = OptionParser(usage)
 
-    # restartJob_def = 'esearch'
     restartJob_def = 'minimap'
     parser.add_option( "-s", \
                        "--restartJob", \
@@ -36,11 +35,8 @@ def real_main():
                        help    = "Start at this point in the pipeline.", \
                        default = restartJob_def )
 
-    parser.set_description( "This pipeline requires a config file specified as an argument" )
+    parser.set_description( "This pipeline requires a config file and name of a log file specified as arguments" )
 
-
-    # Parsing the arguments
-    (options, args) = parser.parse_args()
 
     # Parsing the arguments
     (options, args) = parser.parse_args()
@@ -63,28 +59,33 @@ def real_main():
         logFile = argv[2]
 
     except:
-        print("Please provide the path to log file")
+        print("ERROR: Please provide name of log file")
         assert False
     #####
 
-     # Setting the config file name
+    # Setting of Configuration
     configFile = "%s/%s" % (basePath, configFileName)
     logFileFh = open(logFile, "a")
     configDict = parseConfig(configFile, basePath, logFileFh)
 
-    if (configDict["PATH"] == 'minimap'):
-         # Check if stage is valid
-        if nextStep not in minimap_stages:
-            print("'%s' is not a valid stage for minimap pipeline" % nextStep)
-            assert False
-        #####
+    # if (configDict["PATH"] == 'minimap'):
+    #      # Check if stage is valid
+    #     if nextStep not in minimap_stages:
+    #         print("'%s' is not a valid stage for minimap pipeline" % nextStep)
+    #         assert False
+    #     #####
 
-    elif (configDict["PATH"] == 'edirect'):
-        # Check if stage is valid
-        if nextStep not in edirect_stages:
-            print("'%s' is not a valid stage for edirect pipeline" % nextStep)
-            assert False
-        #####
+    # elif (configDict["PATH"] == 'edirect'):
+    #     # Check if stage is valid
+    #     if nextStep not in edirect_stages:
+    #         print("'%s' is not a valid stage for edirect pipeline" % nextStep)
+    #         assert False
+    #     #####
+
+    if nextStep not in minimap_stages:
+        print("'%s' is not a valid stage for minimap pipeline" % nextStep)
+        assert False
+    #####
 
 
 

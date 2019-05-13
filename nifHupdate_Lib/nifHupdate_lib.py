@@ -29,16 +29,17 @@ def_species_pident = 91.9
 def_genus_pident = 88.1
 def_family_pident = 75
 def_dbfiles = ["nhr", "nsd", "nin", "nsi", "nsq"]
-def_dbname = "DB"
+def_dbname = "blastnDB"
 def_evalue = 0.001
 def_minimap_align_len_cutoff = 200
 def_blastn_align_len_cutoff = 200
 
 # #========================
 # Allowed sets
+MINIMAP_LABELS = set(["PREFIX" , "DBFILE", "NUCCORE", "MIN_MINIMAP_ALIGNLEN", "MIN_BLASTN_ALIGNLEN", "PIDENT_CUTOFF"])
 DATETYPES = set(["PDAT"])
 edirect_stages = set(['esearch', 'fasta', 'fasta_rehead','set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end'])
-minimap_stages = set(['minimap', 'minimap_filter', 'set_db', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end', 'rehead_fasta'])
+minimap_stages = set(['minimap', 'minimap_filter', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end', 'rehead_fasta'])
 MAX_REQUESTS = 3 # for entrex direct
 
 
@@ -155,7 +156,7 @@ def blastnCmds(dbName, fastaFile, blastOutputFile, fmtString = def_blastnOutfmt)
     return blastCmd
 
 #========================
-def bestAlignment(blastnFile, fh):
+def bestAlignment(blastnFile, alignCutOff, pidentCutOff, fh):
     # def_blastnOutfmt = '6 qseqid sseqid pident length qlen mismatch gapopen qstart qend sstart send evalue bitscore sstrand qcovhsp sstrand'
     seqAlignDict = {}
     count = 0
@@ -168,7 +169,7 @@ def bestAlignment(blastnFile, fh):
 
         try:
             # Test pident if > 91%
-            if (pident > def_species_pident and length > def_blastn_align_len_cutoff):
+            if (pident > pidentCutOff and length > alignCutOff):
                 # seqAlignDict[fastaLabel].append(alignmentData)
                 alignmentData[0] += "[%d]" % count # change fasta label
                 newLine = "\t".join(alignmentData)
@@ -314,7 +315,7 @@ def reHead_fasta(fastaFileName, outputFileName):
     fh.close()
     # SeqIO.write(records, "tmp.fasta", "fasta")
 
-def minimap_filter_alignments(pafFilePath):
+def minimap_filter_alignments(pafFilePath, alignCutOff):
     alignSet = set([])
     for line in open(pafFilePath, "r"):
         alignData = line.split("\t")
@@ -322,7 +323,7 @@ def minimap_filter_alignments(pafFilePath):
         numMismatches = float(alignData[9]) # Col 10
         alignLen = float(alignData[10]) # Col 11
         # print("Mismatches: %d, AlignLen: %d" % (numMismatches, alignLen))
-        if (numMismatches / alignLen < .25 and alignLen > def_minimap_align_len_cutoff):
+        if (numMismatches / alignLen < .25 and alignLen > alignCutOff):
             # good enough alignment
             alignSet.add(alignData[5])
         #####
@@ -402,7 +403,10 @@ def parseConfig(configFile, basePath, logFileFh):
     configDict = {}
     for line in open(configFile, "r"):
         if (line[0] != "#"):
+            # Allow user to put in comments in the file
             key, val = line.strip().split(None, 1)
+            if (key not in MINIMAP_LABELS):
+                throwError("%s is not a valid label. Remove it from %s", % (key, configFile))
             configDict[key] = val
 
     # check config errors and put in defaults
@@ -422,113 +426,160 @@ def parseConfig(configFile, basePath, logFileFh):
     except KeyError:
         throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
     # -----------------------------
-    try:
-        x = configDict["DBNAME"]
-    except KeyError:
-        configDict["DBNAME"] = def_dbname
 
 
-    try:
-        errFilePath = configDict["ERRFILE"]
-        if (not isfile(esearchFile)):
-            # make the file
-            fh = open(errFilePath, "w")
-            fh.close()
-    except:
-        configDict["ERRFILE"] = "%s/%s_err.txt" % (basePath, configDict["PREFIX"])
-        fh = open(configDict["ERRFILE"], "w")
-        fh.close()
+    # try:
+    #     errFilePath = configDict["ERRFILE"]
+    #     if (not isfile(esearchFile)):
+    #         # make the file
+    #         fh = open(errFilePath, "w")
+    #         fh.close()
+    # except:
+    #     configDict["ERRFILE"] = "%s/%s_err.txt" % (basePath, configDict["PREFIX"])
+    #     fh = open(configDict["ERRFILE"], "w")
+    #     fh.close()
+
+    # # -----------------------------
+    # # Test specifying what part of the pipeline to use
+    # try:
+    #     path = configDict["PATH"]
+    # except:
+    #     throwError("No PATH provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+
+    # if (path == 'edirect'):
+    #     try:
+    #         queries = configDict["QUERY"]
+    #     except KeyError:
+    #         throwError("No QUERY provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+    #     except:
+    #         throwError("Improper formatting of query terms in the configuration file %s. , logFileFh\
+    #             Please delimit with semicolons ';'", configFile.split("/")[-1])
+    #     # -----------------------------
+    #     # Test DATERANGE, START, END, and DATETYPE
+    #     try:
+    #         useDateRange = configDict["DATERANGE"]
+    #         if (useDateRange.lower() == 'true'):
+    #             try:
+    #                 start = configDict["START"]
+    #                 end   = configDict["END"]
+    #                 if (parseDate(start) > parseDate(end)):
+    #                     throwError("Invalid START and END date in Config File %s. ," +
+    #                         "Check that start date is before end date." % configFile.split("/")[-1])
+    #             except KeyError:
+    #                 throwError("Unable to query in date range without specified start and end time. Please provide START and END tags (MM/DD/YYY, MM/YYYY, or YYYY) in the configuration file %s" % configFile.split("/")[-1], logFileFh)
+    #             #####
+
+    #             try:
+    #                 datetype = configDict["DATETYPE"]
+    #             except KeyError:
+    #                 throwError("Unable to query data in date range without specified datetype. Options are %s" % ",".join(DATETYPES), logFileFh)
+    #             #####
+
+    #             # Everything there
+    #             configDict["DATERANGE"] = True
+    #         else:
+    #             throwError("%s is not a valid value. Only valid value for DATERANGE is 'true'. Otherwise, do not include the DATERANGE tag.", useDateRange, logFileFh)
+    #         #####
+    #     except KeyError:
+    #         # check if other tags were used
+    #         try:
+    #             start = configDict["START"]
+    #             throwError("Provided START tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
+    #         except:
+    #             pass
+    #         #####
+
+    #         try:
+    #             end   = configDict["END"]
+    #             throwError("Provided END tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
+    #         except:
+    #             pass
+    #         #####
+
+    #         try:
+    #             datetype = configDict["DATETYPE"]
+    #             throwError("Provided DATETYPE tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
+    #         except:
+    #             pass
+    #         #####
+
+    #         # Default to not use date range
+    #         configDict["DATERANGE"] = False
+
+    #     # -----------------------------
+    #     try:
+    #         x = configDict["SORTTERMS"]
+    #         configDict["SORTTERMS"] = x.split(None) # store the space delmited sort terms into a list
+    #     except:
+    #         # place default
+    #         configDict["SORTTERMS"] = def_sorttype
+    #     #####
+
+    # elif (path == 'minimap'):
+    #     # -----------------------------
+    #     try:
+    #         nuccore = "%s/%s" % (basePath, configDict["NUCCORE"])
+    #         if (not isfile(dbFile)):
+    #             throwError("Could not find database fasta file %s" % dbFile, logFileFh)
+    #         # if (os.stat(nuccore).st_size == 0):
+    #         #     throwError("%s is empty.")
+    #     except KeyError:
+    #         throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
+    #     #####
+
+    #     # Parameters
+    #     # -----------------------------
+    #     try:
+    #         x = configDict["MIN_MINIMAP_ALIGNLEN"]
+    #     except KeyError:
+    #         configDict["MIN_ALIGNLEN"] = def_minimap_align_len_cutoff
+    #     # -----------------------------
+    #     try:
+    #         x = configDict["MIN_BLASTN_ALIGNLEN"]
+    #     except:
+    #         configDict["MIN_BLASTN_ALIGNLEN"] = def_blastn_align_len_cutoff
+    #     # -----------------------------
+    #     try:
+    #         x = configDict["PIDENT_CUTOFF"]
+    #     except KeyError:
+    #         configDict["PIDENT_CUTOFF"] = def_species_pident
+
+    # else:
+    #     throwError("%s is not a valid PATH. Choose either edirect or minimap" % path)
+    # #####
 
     # -----------------------------
-    # Test specifying what part of the pipeline to use
     try:
-        path = configDict["PATH"]
-    except:
-        throwError("No PATH provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
-
-    if (path == 'edirect'):
-        try:
-            queries = configDict["QUERY"]
-        except KeyError:
-            throwError("No QUERY provided in the configuration file %s" % configFile.split("/")[-1], logFileFh)
-        except:
-            throwError("Improper formatting of query terms in the configuration file %s. , logFileFh\
-                Please delimit with semicolons ';'", configFile.split("/")[-1])
-        # -----------------------------
-        # Test DATERANGE, START, END, and DATETYPE
-        try:
-            useDateRange = configDict["DATERANGE"]
-            if (useDateRange.lower() == 'true'):
-                try:
-                    start = configDict["START"]
-                    end   = configDict["END"]
-                    if (parseDate(start) > parseDate(end)):
-                        throwError("Invalid START and END date in Config File %s. ," +
-                            "Check that start date is before end date." % configFile.split("/")[-1])
-                except KeyError:
-                    throwError("Unable to query in date range without specified start and end time. Please provide START and END tags (MM/DD/YYY, MM/YYYY, or YYYY) in the configuration file %s" % configFile.split("/")[-1], logFileFh)
-                #####
-
-                try:
-                    datetype = configDict["DATETYPE"]
-                except KeyError:
-                    throwError("Unable to query data in date range without specified datetype. Options are %s" % ",".join(DATETYPES), logFileFh)
-                #####
-
-                # Everything there
-                configDict["DATERANGE"] = True
-            else:
-                throwError("%s is not a valid value. Only valid value for DATERANGE is 'true'. Otherwise, do not include the DATERANGE tag.", useDateRange, logFileFh)
-            #####
-        except KeyError:
-            # check if other tags were used
-            try:
-                start = configDict["START"]
-                throwError("Provided START tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
-            except:
-                pass
-            #####
-
-            try:
-                end   = configDict["END"]
-                throwError("Provided END tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
-            except:
-                pass
-            #####
-
-            try:
-                datetype = configDict["DATETYPE"]
-                throwError("Provided DATETYPE tag, but DATERANGE is not specified in configFile %s" % configFile.split("/")[-1], logFileFh)
-            except:
-                pass
-            #####
-
-            # Default to not use date range
-            configDict["DATERANGE"] = False
-
-        # -----------------------------
-        try:
-            x = configDict["SORTTERMS"]
-            configDict["SORTTERMS"] = x.split(None) # store the space delmited sort terms into a list
-        except:
-            # place default
-            configDict["SORTTERMS"] = def_sorttype
-        #####
-
-    elif (path == 'minimap'):
-        # -----------------------------
-        try:
-            nuccore = "%s/%s" % (basePath, configDict["NUCCORE"])
-            if (not isfile(dbFile)):
-                throwError("Could not find database fasta file %s" % dbFile, logFileFh)
-            # if (os.stat(nuccore).st_size == 0):
-            #     throwError("%s is empty.")
-        except KeyError:
-            throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
-        #####
-    else:
-        throwError("%s is not a valid PATH. Choose either edirect or minimap" % path)
+        nuccore = "%s/%s" % (basePath, configDict["NUCCORE"])
+        if (not isfile(dbFile)):
+            throwError("Could not find database fasta file %s" % dbFile, logFileFh)
+        # if (os.stat(nuccore).st_size == 0):
+        #     throwError("%s is empty.")
+    except KeyError:
+        throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
     #####
+
+    # Parameters
+    # -----------------------------
+    try:
+        x = configDict["MIN_MINIMAP_ALIGNLEN"]
+        configDict["MIN_MINIMAP_ALIGNLEN"] = int(x)
+    except KeyError:
+        configDict["MIN_ALIGNLEN"] = def_minimap_align_len_cutoff
+    # -----------------------------
+    try:
+        x = configDict["MIN_BLASTN_ALIGNLEN"]
+        configDict["MIN_BLASTN_ALIGNLEN"] = int(x)
+    except:
+        configDict["MIN_BLASTN_ALIGNLEN"] = def_blastn_align_len_cutoff
+    # -----------------------------
+    try:
+        x = configDict["PIDENT_CUTOFF"]
+        configDict["PIDENT_CUTOFF"] = float(x)
+    except KeyError:
+        configDict["PIDENT_CUTOFF"] = def_species_pident
+    #####
+
     return configDict
 
 
