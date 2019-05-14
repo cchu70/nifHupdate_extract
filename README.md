@@ -26,13 +26,13 @@ data/home/user/nuccore/570_1.fasta
 data/home/user/nuccore/570_2.fasta
 data/home/user/nuccore/570_3.fasta
 ```
-4) Create Configuration File. Below are each label, and what they are used for. Those with a (*) are mandatory. The others have default values. 
-- PREFIX (*) will be used to name all intermediate and output files and directories.
-- DBFILE (*) file path to your existing database in fasta format.
-- NUCCORE (*) file path to a text file containing file paths to all relevant fasta files of your local database you are searching from
-- MIN_MINIMAP_ALIGNLEN Default is 200 bp. Minimap will drop any alignments that are below this length.
-- MIN_BLASTN_ALIGNLEN Default is 200 bp. Blastn will drop any alignments that are below this length.
-- PIDENT_CUTOFF Default is 91.9%, which is the cutoff used for determining similarity at the species level. 
+4) Create Configuration File. Below are each label, and what they are used for. Those with a * are mandatory. The others have default values. 
+- PREFIX * will be used to name all intermediate and output files and directories.
+- DBFILE * file path to your existing database in fasta format.
+- NUCCORE * file path to a text file containing file paths to all relevant fasta files of your local database you are searching from
+- MIN_MINIMAP_ALIGNLEN Default = 200 bp. Minimap will drop any alignments that are below this length.
+- MIN_BLASTN_ALIGNLEN Default = 200 bp. Blastn will drop any alignments that are below this length.
+- PIDENT_CUTOFF Default = 91.9%, which is the cutoff used for determining similarity at the species level. 
 - # Used to denote a comment. 
 
 These labels can be specified in any order. The program will halt if there are any formatting errors or unnecessary labels. Here is an example configuration file called `my_config.txt`
