@@ -42,6 +42,8 @@ edirect_stages = set(['esearch', 'fasta', 'fasta_rehead','set_db', 'blastn', 'fi
 minimap_stages = set(['minimap', 'minimap_filter', 'blastn', 'filter_best_alignments', 'trim_seq', 'cluster', 'deduplicate', 'end', 'rehead_fasta'])
 MAX_REQUESTS = 3 # for entrex direct
 
+def_validFastaEndings = set(["fa", "fasta", "fna"])
+
 
 
 #========================
@@ -423,7 +425,8 @@ def parseConfig(configFile, basePath, logFileFh):
     try:
         dbFile = configDict["DBFILE"]
         if (not isfile(dbFile)):
-            throwError("Could not find database fasta file %s" % dbFile, logFileFh)
+            throwError("Could not find file %s" % dbFile, logFileFh)
+
     except KeyError:
         throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
     # -----------------------------
@@ -551,11 +554,28 @@ def parseConfig(configFile, basePath, logFileFh):
 
     # -----------------------------
     try:
-        nuccore = "%s/%s" % (basePath, configDict["NUCCORE"])
-        if (not isfile(dbFile)):
-            throwError("Could not find database fasta file %s" % dbFile, logFileFh)
+        nuccore = configDict["NUCCORE"]
+        if (not isfile(nuccore)):
+            throwError("Could not find database fasta file %s. Make sure you provide the \
+                full path to the fofn file or a single fasta file or your database you are searching" % dbFile, logFileFh)
         # if (os.stat(nuccore).st_size == 0):
         #     throwError("%s is empty.")
+
+        # if (isFastaFile(nuccore)):
+        #     # Make a fofn file for the single fasta file
+        #     newFofnFileName = "%s_db_fasta.fofn" % configDict["PREFIX"]
+        #     fh = open(newFofnFileName, "w")
+        #     print("Making fofn file %s" % newFofnFileName)
+
+        #     fh.write(nuccore)
+        #     fh.close()
+        #     configDict["NUCCORE"] = newFofnFileName
+        # else:
+        #     print("not a fasta!")
+        #     assert False
+        # #####
+
+
     except KeyError:
         throwError("No database fasta file provided in configuration file %s" % configFile.split("/")[-1], logFileFh)
     #####
@@ -566,7 +586,7 @@ def parseConfig(configFile, basePath, logFileFh):
         x = configDict["MIN_MINIMAP_ALIGNLEN"]
         configDict["MIN_MINIMAP_ALIGNLEN"] = int(x)
     except KeyError:
-        configDict["MIN_ALIGNLEN"] = def_minimap_align_len_cutoff
+        configDict["MIN_MINIMAP_ALIGNLEN"] = def_minimap_align_len_cutoff
     # -----------------------------
     try:
         x = configDict["MIN_BLASTN_ALIGNLEN"]
@@ -607,6 +627,18 @@ def parseDate(date):
 
     return year
 
+#========================
+def isFastaFile(fastaFileName):
+
+    fileEnding = fastaFileName.split(".")[-1] # Get the file ending
+    isFasta = False
+    for ending in def_validFastaEndings:
+        if ending == fileEnding:
+            isFasta = True
+            break
+    #####
+
+    return isFasta
 
 # TESTING
 #========================
