@@ -6,7 +6,7 @@ from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearch
  throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate, minimapCmds, mapEsearch, reHead, \
  def_minimap_align_len_cutoff, whichFastaFofn, extractFileName, reHead_fasta, getBlastnSeq, minimap_filter_alignments
 
-from os.path import abspath, join, isfile, isdir
+from os.path import abspath, join, isfile, isdir, getsize
 
 from optparse import OptionParser
 
@@ -441,7 +441,7 @@ def real_main():
         pafFofnFile = "%s.minimap.fofn" % PREFIX
 
         # Parse the fofn file
-        nuccoreDBFofn =configDict["NUCCORE"].strip() # path to nuccore fofn
+        nuccoreDBFofn = configDict["NUCCORE"].strip() # path to nuccore fofn
         nuccoreFilePathDict = {}
         for filePath in open(nuccoreDBFofn, "r"):
             fastaFileID = filePath.split("/")[-1].split(".")[0]
@@ -486,9 +486,13 @@ def real_main():
         # CMDLIST.append("mv *.filtered.fasta ./minimap_filter")
 
         fh.close()
-
-        # Continue with blast
-        nextStage = 'rehead_fasta'
+        if (getsize(fofnFileName) == 0):
+            CMDLIST.append("echo No alignments found. %s is empty. Terminating pipeline." % fofnFileName)
+            nextStage = "end"
+        else:
+            # Continue with next stage
+            nextStage = 'rehead_fasta'
+        #####
 
 # ================= STAGE C ===================== #
     elif (stage == "rehead_fasta"):
