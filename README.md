@@ -10,7 +10,7 @@ The edirect method had several shortcomings, namely the time it took to retrieve
 # Tutorial
 The following steps will guide you through how to set up and run this pipeline
 
-1) Activate your environment if desired. I used ddocent_env (http://www.ddocent.com//bioconda/), which contains many of the tools necessary.
+1) Activate your environment if desired. I used ddocent_env (http://www.ddocent.com/bioconda/), which contains many of the tools necessary.
 ```
 source activate ddocent_env
 ```
@@ -29,10 +29,10 @@ data/home/user/nuccore/570_3.fasta
 4) Create Configuration File. Below are each label, and what they are used for. Those with a * are mandatory. The others have default values. 
 - PREFIX * will be used to name all intermediate and output files and directories.
 - DBFILE * file path to your existing database in fasta format.
-- NUCCORE * file path to a text file containing file paths to all relevant fasta files of your local database you are searching from
+- NUCCORE * file path to a text file containing file paths to all relevant (unzipped) fasta files of your local database you are searching from, even if it is a single fasta file
 - MIN_MINIMAP_ALIGNLEN Default = 200 bp. Minimap will drop any alignments that are below this length.
 - MIN_BLASTN_ALIGNLEN Default = 200 bp. Blastn will drop any alignments that are below this length.
-- PIDENT_CUTOFF Default = 91.9%, which is the cutoff used for determining similarity at the species level. 
+- PIDENT_CUTOFF Default = 75%, which is the cutoff used for degree of similarity among organisms from the same family. This is used to capture homologs. 
 - # Used to denote a comment. 
 
 These labels can be specified in any order. The program will halt if there are any formatting errors or unnecessary labels. Here is an example configuration file called `my_config.txt`
@@ -56,7 +56,7 @@ You can restart the pipeline at any point adding the `-s` option and specifying 
 ```
 $ path/to/nifHUpdate_Lib/nifHUpdate_caller.py my_config.txt my_log_file_name.txt -s blastn
 ```
-View what stages are available below.
+View what stages are available below. Running the command without the `-s` option will default to rerunning the pipeline from the beginning. It is recommended that if you want to save the result of each run, instead of rerunning with the same prefix, make a new configuration file with a different prefix label. 
 
 ### Stages
 - minimap
@@ -76,7 +76,6 @@ View what stages are available below.
 nifHUpdate requires the following packages, and is highly recommended to run in an environment
 - Python 
 - Biopython
-- edirect (installation instructions here: https://www.ncbi.nlm.nih.gov/books/NBK179288/)
 - cd-hit-auxtools 
 - blastn
 
