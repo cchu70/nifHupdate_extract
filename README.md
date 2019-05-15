@@ -33,7 +33,7 @@ data/home/user/nuccore/570_3.fasta
 - MIN_MINIMAP_ALIGNLEN Default = 200 bp. Minimap will drop any alignments that are below this length.
 - MIN_BLASTN_ALIGNLEN Default = 200 bp. Blastn will drop any alignments that are below this length.
 - PIDENT_CUTOFF Default = 75%, which is the cutoff used for degree of similarity among organisms from the same family. This is used to capture homologs. 
-- # Used to denote a comment. 
+- '#' Used to denote a comment. 
 
 These labels can be specified in any order. The program will halt if there are any formatting errors or unnecessary labels. Here is an example configuration file called `my_config.txt`
 ```
