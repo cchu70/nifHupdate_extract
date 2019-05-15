@@ -114,13 +114,17 @@ def real_main():
     #####
 
 
-
-    # Continue adding commands
     cdFolder  = "cd %s/%s" % (basePath, configDict["PREFIX"])
+    stageEcho = "echo Launching stage %s" % nextStep
+    stageWrite = "echo Launching stage %s >> %s" % (nextStep, logFile)
+
     launchCmd = "python3 %s/nifHupdate_Lib/nifHupdate_launch.py %s %s %s %s/%s" % (basePath, configFile, nextStep, basePath, basePath, logFile)
     cdOut = "cd %s" % basePath # go back out
     cleanUpCmd = "mv %s_*.sh ./%s" % (configDict["PREFIX"], configDict["PREFIX"]) # Move stuff into directory
 
+    cmdList.append("echo =========== RESTART ============ >> %s" % logFile)
+    cmdList.append(stageEcho)
+    cmdList.append(stageWrite)
     cmdList.append(cdFolder)
     cmdList.append(launchCmd)
     cmdList.append(cdOut)
