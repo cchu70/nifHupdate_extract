@@ -226,7 +226,6 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
             organism = record.description.split(None, 1)[1]; # for nuccore
 
             header = "%s;%s;%s" % (record.id, cluster, organism)
-            print(header)
             record.id = header
             record.description = ""
             SeqIO.write(record, outputFileHandle, "fasta")
@@ -234,8 +233,8 @@ def trimSeq(fastaFileName, outputFileName, blastItems):
 
 def getBlastnSeq(blastnFile, outputFile):
     fh = open(outputFile, "w")
-    print(blastnFile)
-    print(outputFile)
+    # print(blastnFile)
+    # print(outputFile)
     for line in open(blastnFile, "r"):
         sseq = line.split()[-1] # sequence is the last line
         blastnId = line.split()[0] # accession number and description
@@ -244,7 +243,7 @@ def getBlastnSeq(blastnFile, outputFile):
 
         cluster = line.split()[1].split(";")[1]
         record = SeqRecord(seq_obj, "%s;%s;%s" % (acc, cluster, description), '', '')
-        print(record)
+        # print(record)
         # records.append(record)
         SeqIO.write(record, fh, "fasta")
     ####
@@ -310,7 +309,6 @@ def reHead_fasta(fastaFileName, outputFileName):
         # record.id = acc + ";" + description
         record.id = ";".join(headerData)
         record.description = ""
-        print(record)
 
         SeqIO.write(record, fh, "fasta")
     #####
@@ -373,7 +371,6 @@ def deduplicate(fastaFile):
     header, x = fastaFile.split("/")[-1].split(".", 1)
     outputFile = "%s.dup.fasta" % (header)
     cdHitDupCmd = "cd-hit-dup -i %s -o %s" % (fastaFile, outputFile)
-    print(cdHitDupCmd)
     n = subprocess.Popen(cdHitDupCmd, shell=True)
     n.poll()
     # return cdHitDupCmd
@@ -598,7 +595,7 @@ def parseConfig(configFile, basePath, logFileFh):
         x = configDict["PIDENT_CUTOFF"]
         configDict["PIDENT_CUTOFF"] = float(x)
     except KeyError:
-        configDict["PIDENT_CUTOFF"] = def_species_pident
+        configDict["PIDENT_CUTOFF"] = def_family_pident
     #####
 
     return configDict
@@ -606,7 +603,7 @@ def parseConfig(configFile, basePath, logFileFh):
 
 #========================
 def launch(shFileName):
-    print("Launching %s" % shFileName)
+    print("\nLaunching %s\n" % shFileName)
     # n = subprocess.Popen(["bash", "%s >> %s" % (shFileName, outFileName)])
     n = subprocess.Popen(["bash", shFileName])
     wait(n) # wait for the shfile to finish running before proceeding
