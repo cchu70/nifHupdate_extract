@@ -397,10 +397,13 @@ def real_main():
             fofn = PREFIX + "." + fileSuffix
             if (isfile(fofn)):
                 # if the actual fofn file exists
+                CMDLIST.append("echo Reading %s" % fofn)
                 for file in open(fofn):
                     CMDLIST.append("echo Number of sequences in %s >> %s" % (file.strip(), logFile))
                     CMDLIST.append("""cat %s | grep ">" | wc -l >> %s""" % (file.strip(), logFile))
                 #####
+            else:
+                CMDLIST.append("echo %s is not a file" % fofn)
             #####
         #####
 
