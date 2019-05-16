@@ -373,10 +373,8 @@ def real_main():
         dedupFastaFofn = "%s.cluster_fasta_dedup.fofn" % PREFIX
         fh = open(dedupFastaFofn, "w")
         for fastaFile in open(clusterFastaFofn, "r"):
-            # print(fastaFile)
-            # CMDLIST.append(deduplicate(fastaFile.strip()))
-            deduplicate(fastaFile.strip())
-            fh.write(fastaFile)
+            newFastaFileName = deduplicate(fastaFile.strip())
+            fh.write("%s/%s/clusters_dedup/%s\n" % (basePath, PREFIX, newFastaFileName))
         #####
         rmCmd = 'rm -r *.clstr'
         CMDLIST.append(rmCmd)
