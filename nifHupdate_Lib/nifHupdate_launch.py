@@ -400,7 +400,7 @@ def real_main():
             if (isfile(fofn)):
                 # if the actual fofn file exists
                 for file in open(fofn):
-                    CMDLIST.append("Echo Number of sequences in %s >> %s" % (file.strip(), logFile))
+                    CMDLIST.append("echo Number of sequences in %s >> %s" % (file.strip(), logFile))
                     CMDLIST.append("""cat %s | grep ">" | wc -l >> %s""" % (file.strip(), logFile))
                 #####
             #####
