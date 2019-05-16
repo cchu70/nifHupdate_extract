@@ -376,6 +376,7 @@ def real_main():
             newFastaFileName = deduplicate(fastaFile.strip())
             fh.write("%s/%s/clusters_dedup/%s\n" % (basePath, PREFIX, newFastaFileName))
         #####
+        fh.close()
         rmCmd = 'rm -r *.clstr'
         CMDLIST.append(rmCmd)
         CMDLIST.append("mv *.dup.fasta ./clusters_dup")
