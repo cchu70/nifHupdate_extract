@@ -379,7 +379,7 @@ def real_main():
         fh.close()
         rmCmd = 'rm -r *.clstr'
         CMDLIST.append(rmCmd)
-        CMDLIST.append("mv *.dup.fasta ./clusters_dup")
+        CMDLIST.append("mv *.dup.fasta ./clusters_dedup")
         nextStage = 'end'
 
 # ================= STAGE 9 ===================== #
