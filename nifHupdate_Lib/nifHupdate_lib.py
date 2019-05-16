@@ -43,7 +43,7 @@ minimap_stages = set(['minimap', 'minimap_filter', 'blastn', 'filter_best_alignm
 MAX_REQUESTS = 3 # for entrex direct
 
 def_validFastaEndings = set(["fa", "fasta", "fna"])
-def_expectedFastaFofns = ["fasta.trim.fofn", "cluster_fasta.fofn", "cluster_fasta_dedup.fofn"]
+def_expectedFastaFofns = ["minimap_filter.fofn", "fasta.trim.fofn", "cluster_fasta.fofn", "cluster_fasta_dedup.fofn"]
 
 
 
