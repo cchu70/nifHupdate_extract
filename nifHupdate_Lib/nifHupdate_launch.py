@@ -4,7 +4,8 @@ __date__ ="2/24/19"
 
 from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, esearchCmds, fastaCmds, blastnCmds, bestAlignment, \
  throwError, verifyDb, test, testPrintFile, wait, fasta, trimSeq, mapBlast, deduplicate, minimapCmds, mapEsearch, reHead, \
- def_minimap_align_len_cutoff, whichFastaFofn, extractFileName, reHead_fasta, getBlastnSeq, minimap_filter_alignments
+ def_minimap_align_len_cutoff, whichFastaFofn, extractFileName, reHead_fasta, getBlastnSeq, minimap_filter_alignments, \
+ def_expectedFastaFofns
 
 from os.path import abspath, join, isfile, isdir, getsize
 
@@ -364,8 +365,8 @@ def real_main():
     # cd-hit-dup -i fasta -o output
         # print('In deduplication stage!')
 
-        if (not isdir("clusters_dup")):
-            CMDLIST.append("mkdir clusters_dup")
+        if (not isdir("clusters_dedup")):
+            CMDLIST.append("mkdir clusters_dedup")
 
         clusterFastaFofn = "%s.cluster_fasta.fofn" % PREFIX
 
@@ -393,12 +394,22 @@ def real_main():
         #####
         CMDLIST.append("mv *.sh ./shFiles")
         CMDLIST.append("echo nifHpdate complete!")
-        # CMDLIST.append("cat %s" % logFile)
 
-        # shFileName = createShFile(CMDLIST, basePath, PREFIX, stage)
-        # launch(shFileName)
-        # return 0
-        # print stats
+        for fileSuffix in def_expectedFastaFofns:
+            fofn = PREFIX + "." + fileSuffix
+            if (isfile(fofn)):
+                # if the actual fofn file exists
+                for file in open(fofn):
+                    CMDLIST.append("Echo Number of sequences in %s >> %s" % (file.strip(), logFile))
+                    CMDLIST.append("""cat %s | grep ">" | wc -l >> %s""" % (file.strip(), logFile))
+                #####
+            #####
+        #####
+
+
+        # Summary
+
+
 
 # ============= ALTERNATIVE APPROACH ============ #
 # ================= STAGE A ===================== #

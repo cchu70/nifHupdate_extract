@@ -43,6 +43,7 @@ minimap_stages = set(['minimap', 'minimap_filter', 'blastn', 'filter_best_alignm
 MAX_REQUESTS = 3 # for entrex direct
 
 def_validFastaEndings = set(["fa", "fasta", "fna"])
+def_expectedFastaFofns = set(["fasta.trim.fofn", "cluster_fasta.fofn", "cluster_fasta_dedup.fofn"])
 
 
 
@@ -603,7 +604,7 @@ def parseConfig(configFile, basePath, logFileFh):
 
 #========================
 def launch(shFileName):
-    print("\nLaunching %s\n" % shFileName)
+    print("\nRunning %s\n" % shFileName)
     # n = subprocess.Popen(["bash", "%s >> %s" % (shFileName, outFileName)])
     n = subprocess.Popen(["bash", shFileName])
     wait(n) # wait for the shfile to finish running before proceeding
