@@ -374,6 +374,7 @@ def deduplicate(fastaFile):
     cdHitDupCmd = "cd-hit-dup -i %s -o %s" % (fastaFile, outputFile)
     n = subprocess.Popen(cdHitDupCmd, shell=True)
     n.poll()
+    return outputFile
     # return cdHitDupCmd
 
 #========================
