@@ -333,7 +333,7 @@ def real_main():
                     try:
                         # new file
                         fh = open(fileName, "a")
-                        ch.write("%s\n" % fileName)
+                        # ch.write("%s\n" % fileName)
                         clusterFileHandles[fileName] = fh
                         # wont work if the cluster name is weirdly formatted
                     except:
