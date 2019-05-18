@@ -28,7 +28,7 @@ data/home/user/nuccore/570_3.fasta
 ```
 4) Create Configuration File. Below are each label, and what they are used for. Those with a * are mandatory. The others have default values. 
 - PREFIX * will be used to name all intermediate and output files and directories.
-- DBFILE * file path to your existing database in fasta format.
+- DBFILE * file path to your existing database in fasta format. The ID of each sequence is in the form `Accession;cluster;organism_name`
 - NUCCORE * file path to a text file containing file paths to all relevant (unzipped) fasta files of your local database you are searching from, even if it is a single fasta file
 - MIN_MINIMAP_ALIGNLEN Default = 200 bp. Minimap will drop any alignments that are below this length.
 - MIN_BLASTN_ALIGNLEN Default = 200 bp. Blastn will drop any alignments that are below this length.
@@ -56,9 +56,12 @@ You can restart the pipeline at any point adding the `-s` option and specifying 
 ```
 $ path/to/nifHUpdate_Lib/nifHUpdate_caller.py my_config.txt my_log_file_name.txt -s blastn
 ```
-View what stages are available below. Running the command without the `-s` option will default to rerunning the pipeline from the beginning. It is recommended that if you want to save the result of each run, instead of rerunning with the same prefix, make a new configuration file with a different prefix label. 
+Available stages are listed below. Running the command without the `-s` option will default to rerunning the pipeline from the beginning. It is recommended that if you want to save the result of each run, instead of rerunning with the same prefix, make a new configuration file with a different prefix label. 
+
+5) The resulting clusters are found in the directory `clusters_dedup`, and a simple summary of the number of sequences in each fasta file created can be found in your log file you named in the initial command.
 
 ### Stages
+The following stages are listed in order in which they are performed.
 - minimap
   This stage does the preliminary mapping of your old database onto your subject database. It outputs `.paf` files, which provides information about the alignments
 - minimap filter
