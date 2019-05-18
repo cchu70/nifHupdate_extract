@@ -403,7 +403,7 @@ def parseConfig(configFile, basePath, logFileFh):
 
     configDict = {}
     for line in open(configFile, "r"):
-        if (line[0] != "#"):
+        if (line[0] != "#" and line != "\n"):
             # Allow user to put in comments in the file
             key, val = line.strip().split(None, 1)
             if (key not in MINIMAP_LABELS):
