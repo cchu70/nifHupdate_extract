@@ -7,7 +7,7 @@ nifHUpdate requires a configuration file with the file paths to relevant files. 
 ## minimap Method
 The edirect method had several shortcomings, namely the time it took to retrieve relevant sequences from NCBI Nucleotide database, and it's reliance on proper annotation of the queried term. Instead, this pipeline takes fasta files of whole genome sequences from some existing database. To extract relevant genomes sequences, we use minimap to perform a preliminary alignment with your existing database. 
 
-![Pipeline Illustration](/nifHupdate2 (1).png?raw=true "nifHupdate pipeline structure")
+![Pipeline Illustration](/nifHupdate_minimap.png?raw=true "nifHupdate pipeline structure")
 
 # Tutorial
 The following steps will guide you through how to set up and run this pipeline
