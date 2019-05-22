@@ -46,7 +46,7 @@ NUCCORE    /Users/nifH_extract/Klebsiella_genomes.fofn
 MIN_MINIMAP_ALIGNLEN 300
 ```
 
-4) Run the following command in your desired directory.
+5) Run the following command in your desired directory.
 
 ```
 $ path/to/nifHUpdate_Lib/nifHUpdate_caller.py my_config.txt my_log_file_name.txt
@@ -60,7 +60,7 @@ $ path/to/nifHUpdate_Lib/nifHUpdate_caller.py my_config.txt my_log_file_name.txt
 ```
 Available stages are listed below. Running the command without the `-s` option will default to rerunning the pipeline from the beginning. It is recommended that if you want to save the result of each run, instead of rerunning with the same prefix, make a new configuration file with a different prefix label. 
 
-5) The resulting clusters are found in the directory `clusters_dedup`, and a simple summary of the number of sequences in each fasta file created can be found in your log file you named in the initial command.
+6) The resulting clusters are found in the directory `clusters_dedup`, and a simple summary of the number of sequences in each fasta file created can be found in your log file you named in the initial command.
 
 ### Stages
 The following stages are listed in order in which they are performed.
