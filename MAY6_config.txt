@@ -1,7 +1,0 @@
-# May 6
-PATH    minimap
-PREFIX  MAY6
-DBFILE    /Users/ClaudiaChu/Documents/Georgia_Tech/GitHub/nifHupdate/nifH_extract/seqDatabase.fasta
-DBNAME      TAXADIVA
-NUCCORE    /Users/ClaudiaChu/Documents/Georgia_Tech/GitHub/nifHupdate/nifH_extract/Klebsiella_genomes.fofn
-ERRFILE /Users/ClaudiaChu/Documents/Georgia_Tech/GitHub/nifHupdate/nifH_extract/MAY1_err.txt
