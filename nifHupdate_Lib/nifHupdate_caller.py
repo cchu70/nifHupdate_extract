@@ -2,7 +2,7 @@
 __author__="Claudia Chu"
 __date__ ="2/18/19"
 
-from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, edirect_stages, minimap_stages, throwError, testPrintFile
+from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, minimap_stages, throwError, testPrintFile
 
 from os.path import abspath, join, isfile, isdir
 
@@ -68,25 +68,10 @@ def real_main():
     logFileFh = open(logFile, "a")
     configDict = parseConfig(configFile, basePath, logFileFh)
 
-    # if (configDict["PATH"] == 'minimap'):
-    #      # Check if stage is valid
-    #     if nextStep not in minimap_stages:
-    #         print("'%s' is not a valid stage for minimap pipeline" % nextStep)
-    #         assert False
-    #     #####
-
-    # elif (configDict["PATH"] == 'edirect'):
-    #     # Check if stage is valid
-    #     if nextStep not in edirect_stages:
-    #         print("'%s' is not a valid stage for edirect pipeline" % nextStep)
-    #         assert False
-    #     #####
-
     if nextStep not in minimap_stages:
         print("'%s' is not a valid stage for minimap pipeline" % nextStep)
         assert False
     #####
-
 
 
     # Command list
@@ -104,7 +89,6 @@ def real_main():
         if (not confirmDir):
             print("Cancelled")
             assert False
-            # throwError("Cancelled", )
         #####
     else:
         if (confirmDir):
@@ -131,6 +115,7 @@ def real_main():
     cmdList.append(cleanUpCmd)
 
     shFileName = createShFile(cmdList, basePath, configDict['PREFIX'], 'launch')
+
     # Stop if shFileName fails
     if ( not isfile(shFileName)):
         throwError("%s not available." % ( shFileName ))

@@ -1,0 +1,1 @@
+CP026275.1	V00631;cluster_I;Klebsiella_pneumoniae	95.52	1809	6179177	79	2	141075	142883	1	1807	0.0	2891	plus	0

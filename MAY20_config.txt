@@ -1,0 +1,5 @@
+# May 20
+PREFIX  MAY20
+DBFILE    /Users/ClaudiaChu/Documents/Georgia_Tech/GitHub/nifHupdate/nifH_extract/seqDatabase.fasta
+NUCCORE    /Users/ClaudiaChu/Documents/Georgia_Tech/GitHub/nifHupdate/nifH_extract/MAY14_test_db.fofn
+MIN_MINIMAP_ALIGNLEN 300
