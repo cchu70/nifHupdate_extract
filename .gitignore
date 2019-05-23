@@ -8,7 +8,13 @@ TAXA*
 *.gz
 A*
 genome_assemblies*
+<<<<<<< HEAD
 Klebsiella*
 proteobacteria_refSeq*
 *.paf
 M*
+=======
+Klebsiella_variicola*
+proteobacteria_refSeq*
+*.paf
+>>>>>>> 610dd852ddf62c86371230fb32e4a7cf781260ba
