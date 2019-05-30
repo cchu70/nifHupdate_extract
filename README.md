@@ -64,17 +64,17 @@ Available stages are listed below. Running the command without the `-s` option w
 
 ### Stages
 The following stages are listed in order in which they are performed.
-- minimap
+- minimap: 
   This stage does the preliminary mapping of your old database onto your subject database. It outputs `.paf` files, which provides information about the alignments
-- minimap filter
+- minimap_filter:
   This stage parses the `.paf` and pulls out the relevant fasta records from your subject database. This reduced set is then passed to the next stage.
-- blastn
+- blastn:
   Blastn does a more thorough alignment to pull out the exact sequences with a high enough similarity (specified in your configuration file). This produces the results in output format 6, with the addition of other details used to extract the relevant sequences. 
-- filter_best_alignments
+- filter_best_alignments:
   This extracts the aligned regions that are above predetermined thresholds and puts them into new fasta files. It also formats the fasta file ID and description to include which cluster that sequence aligned to. 
-- cluster
+- cluster: 
   From the renamed records, this stage simply sorts all the sequences that aligned to the same cluster in its own fasta file.
-- deduplicate
+- deduplicate: 
   Removes copies of the same sequence in each of the cluster files
 
 ### Packages
