@@ -3,7 +3,7 @@ __author__="Claudia Chu"
 __date__ ="2/24/19"
 
 
-from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, blastnCmds, bestAlignment, \
+from nifHupdate_lib import parseConfig, createShFile, launch, blastnCmds, bestAlignment, \
  throwError, verifyDb, test, testPrintFile, wait, deduplicate, \
  def_minimap_align_len_cutoff, extractFileName, reHead_fasta, getBlastnSeq, minimap_filter_alignments, \
  def_expectedFastaFofns

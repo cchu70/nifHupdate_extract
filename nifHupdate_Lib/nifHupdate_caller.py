@@ -2,7 +2,7 @@
 __author__="Claudia Chu"
 __date__ ="2/18/19"
 
-from nifHupdate_lib import parseConfig, createShFile, parseDate, launch, minimap_stages, throwError, testPrintFile
+from nifHupdate_lib import parseConfig, createShFile, launch, minimap_stages, throwError, testPrintFile
 
 from os.path import abspath, join, isfile, isdir
 
